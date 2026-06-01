@@ -1,0 +1,68 @@
+{
+  "project_info": {
+    "project_number": "402631060475",
+    "firebase_url": "https://deliverman-121d0.firebaseio.com",
+    "project_id": "deliverman-121d0",
+    "storage_bucket": "deliverman-121d0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:402631060475:android:fcfcab2d8ca501972d795e",
+        "android_client_info": {
+          "package_name": "net.duare.duare"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAi1yK4l9sT_C71a7RxG9-4uzrFfMNTScY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:402631060475:android:32e501be9364afe22d795e",
+        "android_client_info": {
+          "package_name": "net.duare.duarehub"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAi1yK4l9sT_C71a7RxG9-4uzrFfMNTScY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:402631060475:android:e205887f3748c6302d795e",
+        "android_client_info": {
+          "package_name": "net.duare.duarehub.staging"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAi1yK4l9sT_C71a7RxG9-4uzrFfMNTScY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

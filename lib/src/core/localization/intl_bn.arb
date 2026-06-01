@@ -1,0 +1,95 @@
+{
+    "home": "হোম",
+    "profile": "প্রোফাইল",
+    "orders": "অর্ডারস",
+    "leaderboard": "লিডারবোর্ড",
+    "logout": "লগআউট",
+    "deliveryArea": "ডেলিভারি এলাকা",
+    "editProfile": "প্রোফাইল সম্পাদনা",
+    "totalOrder": "মোট অর্ডার",
+    "totalEarning": "মোট আয়",
+    "pleaseLogin": "লগইন করুন",
+    "authenticationRequired": "যাচাইকরণ প্রয়োজন",
+    "otpSentMessage": "আপনার নম্বরে একটি ওয়ান-টাইম কোড পাঠানো হয়েছে",
+    "submit": "জমা দিন",
+    "enterPhoneNumber": "আপনার ফোন নম্বর দিন",
+    "isRequired": "এই ক্ষেত্রটি প্রয়োজন",
+    "validEmail": "অনুগ্রহ করে একটি বৈধ ইমেইল ঠিকানা দিন",
+    "minLengthValidation": "এই ক্ষেত্রটি কমপক্ষে {min} অক্ষর দীর্ঘ হতে হবে",
+    "@minLengthValidation": {
+        "description": "ন্যূনতম দৈর্ঘ্য যাচাইকরণের জন্য ত্রুটি বার্তা",
+        "placeholders": {
+            "min": {
+                "type": "int",
+                "example": "৩"
+            }
+        }
+    },
+    "maxLengthValidation": "এই ক্ষেত্রটি সর্বাধিক {max} অক্ষর দীর্ঘ হতে হবে",
+    "@maxLengthValidation": {
+        "description": "সর্বোচ্চ দৈর্ঘ্য যাচাইকরণের জন্য ত্রুটি বার্তা",
+        "placeholders": {
+            "max": {
+                "type": "int",
+                "example": "২০"
+            }
+        }
+    },
+    "onboardingTitle": "The Fast\nDelivery App",
+    "onboardingSubtitle": "Find the best Delivery App in your city and get it delivered to your place!",
+    "getStarted": "শুরু করুন",
+    "continueText": "চালিয়ে যান",
+    "passwordMinLengthValidation": "পাসওয়ার্ড কমপক্ষে {minLength} অক্ষর দীর্ঘ হতে হবে",
+    "@passwordMinLengthValidation": {
+        "description": "পাসওয়ার্ডের ন্যূনতম দৈর্ঘ্য যাচাইকরণের জন্য ত্রুটি বার্তা",
+        "placeholders": {
+            "minLength": {
+                "type": "String"
+            }
+        }
+    },
+    "passwordNumberValidation": "পাসওয়ার্ডে কমপক্ষে একটি সংখ্যা থাকতে হবে",
+    "passwordLowerCaseValidation": "পাসওয়ার্ডে কমপক্ষে একটি ছোট হাতের অক্ষর থাকতে হবে",
+    "passwordUpperCaseValidation": "পাসওয়ার্ডে কমপক্ষে একটি বড় হাতের অক্ষর থাকতে হবে",
+    "passwordSpecialCharValidation": "পাসওয়ার্ডে কমপক্ষে একটি বিশেষ অক্ষর থাকতে হবে",
+    "rejectOrderTitle": "কেন আপনি এই অর্ডারটি প্রত্যাখ্যান করছেন?",
+    "rejectOrderSubtitle": "আপনার মতামত আমাদের আপনার অভিজ্ঞতা উন্নত করতে এবং আপনার জন্য আরও ভালো অর্ডার খুঁজে পেতে সাহায্য করে।",
+    "rejectOrderDescriptionLabel": "বিবরণ",
+    "rejectOrderDescriptionHint": "এখানে আপনার কারণ জানান…",
+    "rejectOrder": "অর্ডার প্রত্যাখ্যান করুন",
+    "orderAccepted": "অর্ডার সফলভাবে গ্রহণ করা হয়েছে!",
+    "orderPickedUp": "অর্ডার সফলভাবে পিক আপ করা হয়েছে!",
+    "acceptOrder": "অর্ডার গ্রহণ করুন",
+    "pickUpOrder": "অর্ডার পিক আপ করুন",
+    "deliverOrder": "অর্ডার ডেলিভার করুন",
+    "reject": "প্রত্যাখ্যান",
+    "orderDelivered": "অর্ডার ডেলিভারি হয়েছে",
+    "orderRejected": "অর্ডার সফলভাবে প্রত্যাখ্যান করা হয়েছে!",
+    "undo": "আনডু",
+    "undoOrderTitle": "কেন আপনি এই অর্ডারটি পূর্বাবস্থায় ফিরাচ্ছেন?",
+    "undoOrderSubtitle": "আপনার মতামত আমাদের আপনার অভিজ্ঞতা উন্নত করতে সাহায্য করে।",
+    "undoOrder": "অর্ডার পূর্বাবস্থায় ফেরান",
+    "orderUndone": "অর্ডার সফলভাবে পূর্বাবস্থায় ফেরানো হয়েছে!",
+    "qty": "পরিমাণ",
+    "orderDetails": "অর্ডার বিবরণ",
+    "failedToLoadOrderDetails": "অর্ডার বিবরণ লোড করতে ব্যর্থ হয়েছে।",
+    "retry": "পুনরায় চেষ্টা করুন",
+    "transferOrder": "অর্ডার ট্রান্সফার",
+    "transferOrderTitle": "{riderName}-এর কাছে অর্ডার ট্রান্সফার করবেন?",
+    "@transferOrderTitle": {
+        "description": "ট্রান্সফার অর্ডার নিশ্চিতকরণ ডায়ালগের শিরোনাম",
+        "placeholders": {
+            "riderName": {
+                "type": "String",
+                "example": "জন"
+            }
+        }
+    },
+    "transferOrderSubtitle": "এই অর্ডার ট্রান্সফার করার কারণ জানান।",
+    "transferOrderReasonLabel": "কারণ",
+    "transferOrderReasonHint": "এখানে আপনার কারণ জানান…",
+    "transfer": "ট্রান্সফার",
+    "orderTransferred": "অর্ডার সফলভাবে ট্রান্সফার করা হয়েছে!",
+    "noRidersAvailable": "আপনার ফ্র্যাঞ্চাইজিতে কোনো রাইডার নেই।",
+    "failedToLoadRiders": "রাইডার লোড করতে ব্যর্থ হয়েছে।"
+}

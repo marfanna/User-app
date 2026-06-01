@@ -1,0 +1,102 @@
+name: duare_user
+description: "Duare User App"
+publish_to: 'none'
+
+version: 2.4.0+11
+
+environment:
+  sdk: ^3.10.3
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # UI
+  cupertino_icons: ^1.0.6
+  gap: ^3.0.1
+  google_fonts: ^8.0.0
+  pinput: ^6.0.1
+  toastification: ^3.0.3
+  shimmer: ^3.0.0
+  url_launcher: ^6.3.2
+  # State management
+  flutter_riverpod: ^3.1.0
+  # Navigation
+  go_router: ^17.0.1
+  # Cache & Database
+  shared_preferences: ^2.5.4
+  # Generator and Annotations
+  riverpod_annotation: ^4.0.0
+  freezed_annotation: ^3.1.0
+  # Media
+  flutter_svg: ^2.0.10+1
+  # Logging
+  logger: ^2.4.0
+  pretty_dio_logger: ^1.4.0
+  # Serialization & Deserialization
+  dart_mappable: ^4.6.1
+  # Location
+  geolocator: ^13.0.0
+  geocoding: ^3.0.0
+  # Networking
+  retrofit: ^4.9.2
+  dio: ^5.9.1
+  # Localization
+  flutter_localizations:
+    sdk: flutter
+  intl: ^0.20.2
+  webview_flutter: ^4.13.1
+  image_picker: ^1.1.2
+  in_app_update: ^4.2.3
+  firebase_core: ^4.10.0
+  firebase_messaging: ^16.3.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.3
+  flutter_native_splash: ^2.4.6
+  build_runner: ^2.10.5
+  custom_lint: ^0.8.1
+  flutter_guardian:
+   path: ../merchant/packages/flutter_guardian/
+  riverpod_generator: ^4.0.0
+  riverpod_lint: ^3.1.0
+  flutter_gen_runner: ^5.12.0
+  dart_mappable_builder: ^4.6.4
+  retrofit_generator: ^10.2.1
+  freezed: ^3.2.3
+
+flutter:
+  uses-material-design: true
+  generate: true
+
+  assets:
+    - assets/icons/
+    - assets/images/
+    - assets/images/explore/
+    - assets/logo/
+
+
+flutter_gen:
+  output: lib/src/presentation/core/gen
+  line_length: 80
+
+  integrations:
+    flutter_svg: true
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/logo/User.png"
+  background_color: "#FFFFFF"
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/logo/User.png"
+
+flutter_native_splash:
+  color: "#FFFFFF"
+  image: assets/logo/User.png
+  android_12:
+    image: assets/logo/User.png
+    color: "#FFFFFF"

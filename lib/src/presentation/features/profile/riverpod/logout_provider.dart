@@ -1,0 +1,26 @@
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+import '../../../../core/base/base.dart';
+import '../../../../core/di/dependency_injection.dart';
+
+part 'logout_provider.g.dart';
+
+@riverpod
+class Logout extends _$Logout {
+  @override
+  AsyncValue<bool?> build() => const AsyncValue.data(null);
+
+  Future<void> execute() async {
+    state = const AsyncValue.loading();
+
+    final result = await ref.read(logoutUseCaseProvider).call();
+
+    state = result.when(
+      success: (_) {
+        ref.read(resetRepositoryUseCaseProvider).call(ref);
+        return const AsyncValue.data(true);
+      },
+      error: (failure) => AsyncValue.error(failure.message, StackTrace.current),
+    );
+  }
+}

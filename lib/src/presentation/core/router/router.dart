@@ -56,12 +56,18 @@ GoRouter goRouter(Ref ref) {
     initialLocation: Routes.initial,
     redirect: (context, state) {
       Log.info('Router fired for: ${state.uri}');
+      final routerValue = ref.asListenable(routerStateProvider).value;
       if ([
         Routes.initial,
         Routes.onboarding,
         Routes.splash,
       ].contains(state.uri.path)) {
-        return ref.asListenable(routerStateProvider).value;
+        return routerValue;
+      }
+      // Background franchise validation can flip state to selectArea
+      // while user is already on home — redirect them out.
+      if (routerValue == Routes.selectArea) {
+        return Routes.selectArea;
       }
       return null;
     },

@@ -47,17 +47,27 @@ class RouterState extends _$RouterState {
       return;
     }
 
-    // Validate cached franchise ID is still active in the backend.
-    // If the ID was deleted or changed in the DB, user gets blank home screen.
-    // On API failure (offline) we trust the cached ID and go home anyway.
-    final isValid = await _isFranchiseValid(franchiseId);
-    if (!isValid) {
-      await cache.remove([
-        CacheKey.selectedFranchiseId,
-        CacheKey.selectedFranchiseName,
-      ]);
-    }
-    state = isValid ? Routes.home : Routes.selectArea;
+    // Route home immediately (trust cache), validate in background.
+    // Avoids blocking startup on a network call.
+    // Stale franchise → silent redirect to selectArea after validation.
+    state = Routes.home;
+    _validateFranchiseInBackground(franchiseId, cache);
+  }
+
+  void _validateFranchiseInBackground(
+    String franchiseId,
+    CacheService cache,
+  ) {
+    Future.microtask(() async {
+      final isValid = await _isFranchiseValid(franchiseId);
+      if (!isValid) {
+        await cache.remove([
+          CacheKey.selectedFranchiseId,
+          CacheKey.selectedFranchiseName,
+        ]);
+        state = Routes.selectArea;
+      }
+    });
   }
 
   Future<bool> _isFranchiseValid(String franchiseId) async {

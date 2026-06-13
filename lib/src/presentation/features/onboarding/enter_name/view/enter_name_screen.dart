@@ -4,6 +4,7 @@ import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../../core/di/dependency_injection.dart';
+import '../../../../core/theme/src/theme_extensions/src/gradients.dart';
 import '../../../../core/router/routes.dart';
 import '../../../../core/widgets/gradient_background.dart';
 import '../../../../core/widgets/rounded_back_button.dart';
@@ -177,11 +178,7 @@ class _SubmitButton extends StatelessWidget {
         width: double.infinity,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(4),
-          gradient: const RadialGradient(
-            center: Alignment(-0.27, -0.27),
-            radius: 1.53,
-            colors: [Color(0xFF0156A7), Color(0xFF2E3293)],
-          ),
+          gradient: AppGradients.primaryRadial,
         ),
         alignment: Alignment.center,
         child: loading

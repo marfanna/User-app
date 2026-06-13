@@ -1,8 +1,4 @@
 class FeaturedItem {
-  final String id;
-  final String shopId;
-  final FeaturedMenuItem item;
-  final FeaturedShop shop;
 
   const FeaturedItem({
     required this.id,
@@ -21,13 +17,13 @@ class FeaturedItem {
       shop: FeaturedShop.fromJson(json['shop'] as Map<String, dynamic>? ?? {}),
     );
   }
+  final String id;
+  final String shopId;
+  final FeaturedMenuItem item;
+  final FeaturedShop shop;
 }
 
 class FeaturedMenuItem {
-  final String id;
-  final String name;
-  final String? image;
-  final num price;
 
   const FeaturedMenuItem({
     required this.id,
@@ -44,12 +40,13 @@ class FeaturedMenuItem {
       price: json['price'] as num? ?? 0,
     );
   }
+  final String id;
+  final String name;
+  final String? image;
+  final num price;
 }
 
 class FeaturedShop {
-  final String id;
-  final String name;
-  final String? logo;
 
   const FeaturedShop({required this.id, required this.name, this.logo});
 
@@ -60,4 +57,7 @@ class FeaturedShop {
       logo: json['logo'] as String?,
     );
   }
+  final String id;
+  final String name;
+  final String? logo;
 }

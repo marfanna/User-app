@@ -4,9 +4,13 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/router/routes.dart';
+import '../../../core/theme/src/theme_extensions/src/gradients.dart';
 import '../../../core/widgets/rounded_back_button.dart';
 import '../../restaurant_detail/models/restaurant_api_models.dart';
 import '../../cart/riverpod/cart_provider.dart';
+import '../../../../core/di/dependency_injection.dart';
+import '../../../../data/services/analytics/analytics_service.dart';
+import '../../favourites/riverpod/favourites_provider.dart';
 
 class AddFoodArgs {
   const AddFoodArgs({
@@ -34,6 +38,7 @@ class _AddFoodScreenState extends ConsumerState<AddFoodScreen> {
   int _quantity = 1;
   MenuItemVariant? _selectedVariant;
   final Map<String, String> _selectedChoices = {};
+  bool _isToggling = false;
 
   ApiMenuItemData get item => widget.args.item;
 
@@ -77,6 +82,12 @@ class _AddFoodScreenState extends ConsumerState<AddFoodScreen> {
       final def = opt.choices.where((c) => c.isDefault).firstOrNull;
       if (def != null) _selectedChoices[opt.id] = def.id;
     }
+    AnalyticsService.instance.logViewItem(
+      itemId: item.id,
+      itemName: item.name,
+      price: item.price,
+      category: widget.args.shopName,
+    );
   }
 
   @override
@@ -84,6 +95,13 @@ class _AddFoodScreenState extends ConsumerState<AddFoodScreen> {
     final images = _images;
     final cartItems = ref.watch(cartProvider);
     final cartCount = cartItems.fold<int>(0, (sum, c) => sum + c.quantity);
+
+    final favsAsync = ref.watch(favouriteProductsProvider);
+    final isFav = favsAsync.when(
+      data: (list) => list.any((e) => e.item.id == item.id),
+      loading: () => false,
+      error: (_, _) => false,
+    );
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FF),
@@ -96,7 +114,7 @@ class _AddFoodScreenState extends ConsumerState<AddFoodScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildImageSection(context, images),
+                      _buildImageSection(context, images, isFav),
                       _buildContent(context),
                     ],
                   ),
@@ -116,14 +134,10 @@ class _AddFoodScreenState extends ConsumerState<AddFoodScreen> {
                 child: Container(
                   width: 56,
                   height: 56,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      begin: Alignment(-0.24, -0.24),
-                      end: Alignment(0.99, 0.99),
-                      colors: [Color(0xFF0156A7), Color(0xFF2E3293)],
-                    ),
+                  decoration: const BoxDecoration(
+                    gradient: AppGradients.primaryLinear,
                     shape: BoxShape.circle,
-                    boxShadow: const [
+                    boxShadow: [
                       BoxShadow(
                         color: Color.fromRGBO(1, 86, 167, 0.35),
                         blurRadius: 16,
@@ -166,7 +180,7 @@ class _AddFoodScreenState extends ConsumerState<AddFoodScreen> {
     );
   }
 
-  Widget _buildImageSection(BuildContext context, List<String> images) {
+  Widget _buildImageSection(BuildContext context, List<String> images, bool isFav) {
     return Container(
       width: double.infinity,
       height: 307,
@@ -191,7 +205,7 @@ class _AddFoodScreenState extends ConsumerState<AddFoodScreen> {
                     width: double.infinity,
                     height: 307,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
+                    errorBuilder: (_, _, _) => Container(
                       color: const Color(0xFFE0E0E0),
                       child: const Icon(Icons.restaurant, size: 64, color: Color(0xFFC0C0C0)),
                     ),
@@ -231,17 +245,47 @@ class _AddFoodScreenState extends ConsumerState<AddFoodScreen> {
           Positioned(
             top: MediaQuery.of(context).padding.top + 10,
             right: 16,
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.9),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(
-                Icons.favorite_border_rounded,
-                size: 18,
-                color: Color(0xFF040707),
+            child: GestureDetector(
+              onTap: _isToggling
+                  ? null
+                  : () async {
+                      setState(() => _isToggling = true);
+                      try {
+                        final dio = ref.read(dioProvider);
+                        await dio.post('users/favourite-products/toggle', data: {
+                          'itemId': item.id,
+                          'shopId': widget.args.shopId,
+                          'name': item.name,
+                          'price': item.price,
+                          'image': item.image,
+                          'description': item.description,
+                          'shopName': widget.args.shopName,
+                        });
+                        ref.invalidate(favouriteProductsProvider);
+                      } catch (e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Failed to update favourite: $e')),
+                          );
+                        }
+                      } finally {
+                        if (mounted) {
+                          setState(() => _isToggling = false);
+                        }
+                      }
+                    },
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.9),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  isFav ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                  size: 18,
+                  color: isFav ? const Color(0xFFE53935) : const Color(0xFF040707),
+                ),
               ),
             ),
           ),
@@ -879,11 +923,7 @@ class _AddFoodScreenState extends ConsumerState<AddFoodScreen> {
         height: 56,
         child: DecoratedBox(
           decoration: BoxDecoration(
-            gradient: const RadialGradient(
-              center: Alignment(-0.27, -0.27),
-              radius: 1.5,
-              colors: [Color(0xFF0156A7), Color(0xFF2E3293)],
-            ),
+            gradient: AppGradients.primaryRadial,
             borderRadius: BorderRadius.circular(4),
           ),
           child: TextButton(
@@ -960,10 +1000,10 @@ class _AddFoodScreenState extends ConsumerState<AddFoodScreen> {
                 child: Container(
                   width: currentSize,
                   height: currentSize,
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     color: Colors.white,
                     shape: BoxShape.circle,
-                    boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 12)],
+                    boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 12)],
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(currentSize / 2),

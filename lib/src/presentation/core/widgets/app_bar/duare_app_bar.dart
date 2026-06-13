@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
-import 'package:duare_user/src/presentation/core/widgets/rounded_back_button.dart';
+import '../rounded_back_button.dart';
 
 class DuareAppBar extends StatelessWidget {
-  final String title;
-  final Widget? trailing;
-  final VoidCallback? onBackPressed;
-
   const DuareAppBar({
     super.key,
     required this.title,
     this.trailing,
     this.onBackPressed,
   });
+
+  final String title;
+  final Widget? trailing;
+  final VoidCallback? onBackPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +48,7 @@ class DuareAppBar extends StatelessWidget {
               ],
             ),
           ),
-          if (trailing != null) trailing!,
+          ?trailing,
         ],
       ),
     );

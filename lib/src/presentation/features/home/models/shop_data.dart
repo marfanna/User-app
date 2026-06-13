@@ -1,4 +1,5 @@
 class ShopData {
+
   const ShopData({
     required this.id,
     required this.name,
@@ -8,16 +9,9 @@ class ShopData {
     this.isOpen = true,
     this.isPaused = false,
     this.pauseReason,
+    this.rating,
+    this.totalReviews,
   });
-
-  final String id;
-  final String name;
-  final String? logo;
-  final String? banner;
-  final String? area;
-  final bool isOpen;
-  final bool isPaused;
-  final String? pauseReason;
 
   factory ShopData.fromJson(Map<String, dynamic> json) {
     final images = json['images'] as Map<String, dynamic>?;
@@ -33,6 +27,8 @@ class ShopData {
     final isPaused = pause?['isPaused'] as bool? ?? false;
     final isOpen = isPaused ? false : _calcIsOpen(hours);
 
+    final analytics = json['analytics'] as Map<String, dynamic>?;
+
     return ShopData(
       id: (json['_id'] ?? json['id'] ?? '') as String,
       name: (json['name'] ?? '') as String,
@@ -45,8 +41,21 @@ class ShopData {
       isOpen: isOpen,
       isPaused: isPaused,
       pauseReason: pause?['pauseReason'] as String?,
+      rating: (analytics?['averageRating'] as num?)?.toDouble(),
+      totalReviews: (analytics?['totalReviews'] as num?)?.toInt(),
     );
   }
+
+  final String id;
+  final String name;
+  final String? logo;
+  final String? banner;
+  final String? area;
+  final bool isOpen;
+  final bool isPaused;
+  final String? pauseReason;
+  final double? rating;
+  final int? totalReviews;
 
   static bool _calcIsOpen(List<Map<String, dynamic>>? hours) {
     if (hours == null || hours.isEmpty) return true;

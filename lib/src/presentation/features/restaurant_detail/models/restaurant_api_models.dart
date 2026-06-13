@@ -35,6 +35,7 @@ MenuItem menuItemFromApi(ApiMenuItemData item, {int? rank}) {
 // ── Models ─────────────────────────────────────────────────────────────────
 
 class RestaurantData {
+
   const RestaurantData({
     required this.id,
     required this.name,
@@ -49,19 +50,6 @@ class RestaurantData {
     this.isPaused = false,
     this.isActive = true,
   });
-
-  final String id;
-  final String name;
-  final String? description;
-  final String? logo;
-  final String? banner;
-  final double? rating;
-  final int? reviewCount;
-  final String? deliveryTime;
-  final String? distance;
-  final String? addressStr;
-  final bool isPaused;
-  final bool isActive;
 
   factory RestaurantData.fromJson(Map<String, dynamic> json) {
     final images = json['images'] as Map<String, dynamic>?;
@@ -109,12 +97,24 @@ class RestaurantData {
       isActive: json['isActive'] as bool? ?? true,
     );
   }
+
+  final String id;
+  final String name;
+  final String? description;
+  final String? logo;
+  final String? banner;
+  final double? rating;
+  final int? reviewCount;
+  final String? deliveryTime;
+  final String? distance;
+  final String? addressStr;
+  final bool isPaused;
+  final bool isActive;
 }
 
 class MenuData {
-  const MenuData({required this.categories});
 
-  final List<MenuCategoryData> categories;
+  const MenuData({required this.categories});
 
   factory MenuData.fromJson(Map<String, dynamic> json) {
     final rawCats = json['categories'] as List<dynamic>? ?? [];
@@ -126,6 +126,8 @@ class MenuData {
           .toList(),
     );
   }
+
+  final List<MenuCategoryData> categories;
 
   List<MenuItem> get popularItems {
     final popular = categories
@@ -165,18 +167,12 @@ class MenuData {
 }
 
 class MenuCategoryData {
+
   const MenuCategoryData({
     required this.id,
     required this.name,
     required this.items,
   });
-
-  final String id;
-  final String name;
-  final List<ApiMenuItemData> items;
-
-  List<MenuItem> get displayItems =>
-      items.where((i) => i.isAvailable).map((i) => menuItemFromApi(i)).toList();
 
   factory MenuCategoryData.fromJson(Map<String, dynamic> json) {
     final rawItems = json['items'] as List<dynamic>? ?? [];
@@ -189,20 +185,23 @@ class MenuCategoryData {
           .toList(),
     );
   }
+
+  final String id;
+  final String name;
+  final List<ApiMenuItemData> items;
+
+  List<MenuItem> get displayItems =>
+      items.where((i) => i.isAvailable).map((i) => menuItemFromApi(i)).toList();
 }
 
 class MenuItemVariant {
+
   const MenuItemVariant({
     required this.id,
     required this.name,
     required this.price,
     this.isDefault = false,
   });
-
-  final String id;
-  final String name;
-  final double price;
-  final bool isDefault;
 
   factory MenuItemVariant.fromJson(Map<String, dynamic> json) {
     return MenuItemVariant(
@@ -212,20 +211,21 @@ class MenuItemVariant {
       isDefault: json['isDefault'] as bool? ?? false,
     );
   }
+
+  final String id;
+  final String name;
+  final double price;
+  final bool isDefault;
 }
 
 class MenuOptionChoice {
+
   const MenuOptionChoice({
     required this.id,
     required this.name,
     required this.price,
     this.isDefault = false,
   });
-
-  final String id;
-  final String name;
-  final double price;
-  final bool isDefault;
 
   factory MenuOptionChoice.fromJson(Map<String, dynamic> json) {
     return MenuOptionChoice(
@@ -235,9 +235,15 @@ class MenuOptionChoice {
       isDefault: json['isDefault'] as bool? ?? false,
     );
   }
+
+  final String id;
+  final String name;
+  final double price;
+  final bool isDefault;
 }
 
 class MenuItemOption {
+
   const MenuItemOption({
     required this.id,
     required this.name,
@@ -245,12 +251,6 @@ class MenuItemOption {
     required this.required,
     required this.choices,
   });
-
-  final String id;
-  final String name;
-  final String type; // 'radio' | 'checkbox'
-  final bool required;
-  final List<MenuOptionChoice> choices;
 
   factory MenuItemOption.fromJson(Map<String, dynamic> json) {
     final rawChoices = json['choices'] as List<dynamic>? ?? [];
@@ -265,9 +265,16 @@ class MenuItemOption {
           .toList(),
     );
   }
+
+  final String id;
+  final String name;
+  final String type; // 'radio' | 'checkbox'
+  final bool required;
+  final List<MenuOptionChoice> choices;
 }
 
 class ApiMenuItemData {
+
   const ApiMenuItemData({
     required this.id,
     required this.name,
@@ -287,24 +294,6 @@ class ApiMenuItemData {
     this.dietaryInfo = const [],
     this.allergens = const [],
   });
-
-  final String id;
-  final String name;
-  final String? description;
-  final String? image;
-  final List<String> images;
-  final double price;
-  final double? originalPrice;
-  final bool isAvailable;
-  final bool isPopular;
-  final int likeCount;
-  final int dislikeCount;
-  final List<MenuItemVariant> variants;
-  final List<MenuItemOption> options;
-  final int? preparationTime;
-  final int? calories;
-  final List<String> dietaryInfo;
-  final List<String> allergens;
 
   factory ApiMenuItemData.fromJson(Map<String, dynamic> json) {
     final rawImages = json['images'] as List<dynamic>?;
@@ -343,4 +332,22 @@ class ApiMenuItemData {
       allergens: rawAllergens?.whereType<String>().toList() ?? [],
     );
   }
+
+  final String id;
+  final String name;
+  final String? description;
+  final String? image;
+  final List<String> images;
+  final double price;
+  final double? originalPrice;
+  final bool isAvailable;
+  final bool isPopular;
+  final int likeCount;
+  final int dislikeCount;
+  final List<MenuItemVariant> variants;
+  final List<MenuItemOption> options;
+  final int? preparationTime;
+  final int? calories;
+  final List<String> dietaryInfo;
+  final List<String> allergens;
 }

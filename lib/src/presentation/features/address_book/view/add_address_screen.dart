@@ -2,9 +2,15 @@ import 'dart:async';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
+import '../../../../core/di/dependency_injection.dart';
+import '../../../core/theme/src/theme_extensions/src/gradients.dart';
+import '../../../../data/services/network/endpoints.dart';
+import '../riverpod/address_book_provider.dart';
+import 'map_picker_screen.dart';
 
 const _kGoogleApiKey = 'AIzaSyBU7GqUxT98kSlVbD0iFMijQOQFZUbgA7Q';
 
@@ -19,14 +25,14 @@ class _PlaceSuggestion {
   final String secondaryText;
 }
 
-class AddAddressScreen extends StatefulWidget {
+class AddAddressScreen extends ConsumerStatefulWidget {
   const AddAddressScreen({super.key});
 
   @override
-  State<AddAddressScreen> createState() => _AddAddressScreenState();
+  ConsumerState<AddAddressScreen> createState() => _AddAddressScreenState();
 }
 
-class _AddAddressScreenState extends State<AddAddressScreen> {
+class _AddAddressScreenState extends ConsumerState<AddAddressScreen> {
   final _titleController = TextEditingController();
   final _addressController = TextEditingController();
   bool _isDefault = true;
@@ -43,6 +49,14 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
   // Coordinates from GPS or place selection
   double? _lat;
   double? _lng;
+
+  // Structured address components for API
+  String _city = '';
+  String _district = '';
+  String _division = '';
+
+  // Save state
+  bool _saving = false;
 
   static const _titleSuggestions = [
     ('🏠', 'Home'),
@@ -114,6 +128,9 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
         _suppressAutocomplete = true;
         _addressController.text = parts.join(', ');
         _suggestions = [];
+        _city = p.locality ?? '';
+        _district = p.subAdministrativeArea ?? p.subLocality ?? '';
+        _division = p.administrativeArea ?? '';
       }
     } catch (e) {
       if (mounted) {
@@ -190,7 +207,7 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
         'https://maps.googleapis.com/maps/api/place/details/json',
         queryParameters: {
           'place_id': s.placeId,
-          'fields': 'formatted_address,geometry',
+          'fields': 'formatted_address,geometry,address_components',
           'key': _kGoogleApiKey,
         },
       );
@@ -200,6 +217,20 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
         if (location != null) {
           _lat = (location['lat'] as num).toDouble();
           _lng = (location['lng'] as num).toDouble();
+        }
+        final components =
+            result['address_components'] as List? ?? [];
+        for (final comp in components) {
+          final types =
+              (comp['types'] as List?)?.cast<String>() ?? [];
+          final name = comp['long_name'] as String? ?? '';
+          if (types.contains('locality')) _city = name;
+          if (types.contains('administrative_area_level_2')) {
+            _district = name;
+          }
+          if (types.contains('administrative_area_level_1')) {
+            _division = name;
+          }
         }
         _suppressAutocomplete = true;
         _addressController.text =
@@ -212,6 +243,32 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
     }
   }
 
+  // ── Map picker ────────────────────────────────────────────────────────────
+
+  Future<void> _openMapPicker() async {
+    FocusScope.of(context).unfocus();
+    final result = await Navigator.of(context).push<MapPickerResult>(
+      MaterialPageRoute(
+        builder: (_) => MapPickerScreen(
+          initialLat: _lat,
+          initialLng: _lng,
+        ),
+      ),
+    );
+    if (result != null && mounted) {
+      setState(() {
+        _lat = result.lat;
+        _lng = result.lng;
+        _city = result.city;
+        _district = result.district;
+        _division = result.division;
+        _suggestions = [];
+      });
+      _suppressAutocomplete = true;
+      _addressController.text = result.address;
+    }
+  }
+
   // ── Title chips ───────────────────────────────────────────────────────────
 
   void _selectTitle(String title) {
@@ -220,12 +277,14 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
 
   // ── Save ──────────────────────────────────────────────────────────────────
 
-  void _saveAddress() {
+  Future<void> _saveAddress() async {
     final title = _titleController.text.trim();
     final address = _addressController.text.trim();
     if (title.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a title for this address')),
+        const SnackBar(
+          content: Text('Please enter a title for this address'),
+        ),
       );
       return;
     }
@@ -235,7 +294,57 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
       );
       return;
     }
-    Navigator.of(context).pop();
+    if (_lat == null || _lng == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Pin your location on the map or use GPS before saving',
+          ),
+        ),
+      );
+      return;
+    }
+
+    setState(() => _saving = true);
+    try {
+      final dio = ref.read(dioProvider);
+      final typeNorm = title.toLowerCase();
+      final type = (typeNorm == 'home' || typeNorm == 'office')
+          ? typeNorm
+          : 'other';
+      await dio.post(
+        Endpoints.createAddress,
+        data: {
+          'type': type,
+          'label': title,
+          'street': address,
+          'city': _city,
+          'district': _district,
+          'division': _division,
+          'coordinates': {
+            'type': 'Point',
+            'coordinates': [_lng, _lat],
+          },
+        },
+      );
+      ref.invalidate(addressBookProvider);
+      if (mounted) Navigator.of(context).pop(true);
+    } on DioException catch (e) {
+      if (mounted) {
+        final msg = e.response?.data?['message'] as String?;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(msg ?? 'Failed to save address. Try again.')),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to save address. Try again.')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
   }
 
   // ── Build ─────────────────────────────────────────────────────────────────
@@ -315,79 +424,129 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Map placeholder
-          ClipRRect(
-            borderRadius: BorderRadius.circular(5),
-            child: Container(
-              height: 100,
-              width: double.infinity,
-              color: const Color(0xFFE8F0FE),
-              child: Stack(
-                children: [
-                  CustomPaint(
-                    size: const Size(double.infinity, 100),
-                    painter: _MapGridPainter(),
-                  ),
-                  Center(
-                    child: _loadingLocation
-                        ? const Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Color(0xFF0156A7),
+          // Map thumbnail — tap to open full map picker
+          GestureDetector(
+            onTap: _loadingLocation ? null : _openMapPicker,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(5),
+              child: Container(
+                height: 100,
+                width: double.infinity,
+                color: const Color(0xFFE8F0FE),
+                child: Stack(
+                  children: [
+                    CustomPaint(
+                      size: const Size(double.infinity, 100),
+                      painter: _MapGridPainter(),
+                    ),
+                    Center(
+                      child: _loadingLocation
+                          ? const Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Color(0xFF0156A7),
+                                  ),
                                 ),
-                              ),
-                              Gap(6),
-                              Text(
-                                'Getting location…',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Color(0xFF0156A7),
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          )
-                        : Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.location_on, color: Color(0xFFE53935), size: 36),
-                              if (_lat != null && _lng != null)
+                                Gap(6),
                                 Text(
-                                  '${_lat!.toStringAsFixed(4)}, ${_lng!.toStringAsFixed(4)}',
-                                  style: const TextStyle(
-                                    fontSize: 10,
+                                  'Getting location…',
+                                  style: TextStyle(
+                                    fontSize: 12,
                                     color: Color(0xFF0156A7),
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
-                            ],
-                          ),
-                  ),
-                  if (_locationError != null && !_loadingLocation)
-                    Positioned(
-                      bottom: 6,
-                      right: 8,
-                      child: GestureDetector(
-                        onTap: _fetchLocation,
+                              ],
+                            )
+                          : Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.location_on,
+                                  color: Color(0xFFE53935),
+                                  size: 36,
+                                ),
+                                if (_lat != null && _lng != null)
+                                  Text(
+                                    '${_lat!.toStringAsFixed(4)}, '
+                                    '${_lng!.toStringAsFixed(4)}',
+                                    style: const TextStyle(
+                                      fontSize: 10,
+                                      color: Color(0xFF0156A7),
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                    ),
+                    // "Adjust pin" chip — top right
+                    if (!_loadingLocation)
+                      Positioned(
+                        top: 8,
+                        right: 8,
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             color: const Color(0xFF0156A7),
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          child: const Text(
-                            'Retry',
-                            style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.edit_location_alt,
+                                size: 12,
+                                color: Colors.white,
+                              ),
+                              Gap(4),
+                              Text(
+                                'Adjust pin',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
-                    ),
-                ],
+                    if (_locationError != null && !_loadingLocation)
+                      Positioned(
+                        bottom: 6,
+                        right: 8,
+                        child: GestureDetector(
+                          onTap: _fetchLocation,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF0156A7),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: const Text(
+                              'Retry',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -473,7 +632,7 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
               Switch(
                 value: _isDefault,
                 onChanged: (v) => setState(() => _isDefault = v),
-                activeColor: Colors.white,
+                activeThumbColor: Colors.white,
                 activeTrackColor: const Color(0xFF0156A7),
                 inactiveThumbColor: Colors.white,
                 inactiveTrackColor: const Color(0xFFD2D3D6),
@@ -568,7 +727,7 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
               physics: const NeverScrollableScrollPhysics(),
               padding: EdgeInsets.zero,
               itemCount: _suggestions.length,
-              separatorBuilder: (_, __) => const Divider(height: 1, color: Color(0xFFEEEEEE)),
+              separatorBuilder: (_, _) => const Divider(height: 1, color: Color(0xFFEEEEEE)),
               itemBuilder: (context, i) {
                 final s = _suggestions[i];
                 return InkWell(
@@ -700,29 +859,37 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
         child: GestureDetector(
-          onTap: _saveAddress,
+          onTap: _saving ? null : _saveAddress,
           child: Container(
             height: 56,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              gradient: const RadialGradient(
-                center: Alignment(-0.27, -0.27),
-                radius: 1.53,
-                colors: [Color(0xFF0156A7), Color(0xFF2E3293)],
-              ),
+              gradient: _saving
+                  ? null
+                  : AppGradients.primaryRadial,
+              color: _saving ? const Color(0xFFB0BEC5) : null,
               borderRadius: BorderRadius.circular(4),
             ),
-            child: const Text(
-              'Save Address',
-              style: TextStyle(
-                fontFamily: 'Manrope',
-                fontWeight: FontWeight.w700,
-                fontSize: 16,
-                height: 1.5,
-                letterSpacing: -0.5,
-                color: Colors.white,
-              ),
-            ),
+            child: _saving
+                ? const SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      color: Colors.white,
+                    ),
+                  )
+                : const Text(
+                    'Save Address',
+                    style: TextStyle(
+                      fontFamily: 'Manrope',
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                      height: 1.5,
+                      letterSpacing: -0.5,
+                      color: Colors.white,
+                    ),
+                  ),
           ),
         ),
       ),

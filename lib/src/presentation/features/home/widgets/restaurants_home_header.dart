@@ -23,11 +23,11 @@ class RestaurantsHomeHeader extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Text block
-          Column(
+          const Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
+              Text(
                 'Category',
                 style: TextStyle(
                   fontFamily: 'Manrope',
@@ -38,11 +38,11 @@ class RestaurantsHomeHeader extends ConsumerWidget {
                   color: Color(0xFF040707),
                 ),
               ),
-              const Gap(6),
+              Gap(6),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  const Text(
+                  Text(
                     'Restaurants',
                     style: TextStyle(
                       fontFamily: 'Manrope',
@@ -53,8 +53,8 @@ class RestaurantsHomeHeader extends ConsumerWidget {
                       color: Color(0xFF040707),
                     ),
                   ),
-                  const Gap(4),
-                  const Icon(Icons.expand_more, color: Color(0xFF1C1B1F), size: 24),
+                  Gap(4),
+                  Icon(Icons.expand_more, color: Color(0xFF1C1B1F), size: 24),
                 ],
               ),
             ],

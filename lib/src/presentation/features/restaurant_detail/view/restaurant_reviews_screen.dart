@@ -5,12 +5,20 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/theme.dart';
 import '../../../core/widgets/rounded_back_button.dart';
+import '../models/restaurant_api_models.dart';
 
 class RestaurantReviewsScreen extends ConsumerWidget {
-  const RestaurantReviewsScreen({super.key});
+  const RestaurantReviewsScreen({super.key, this.restaurant});
+
+  final RestaurantData? restaurant;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final banner = restaurant?.banner;
+    final logo = restaurant?.logo;
+    final reviewCount = restaurant?.reviewCount ?? 0;
+    final rating = restaurant?.rating?.toStringAsFixed(1) ?? '0.0';
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SingleChildScrollView(
@@ -29,6 +37,12 @@ class RestaurantReviewsScreen extends ConsumerWidget {
                       bottomLeft: Radius.circular(20),
                       bottomRight: Radius.circular(20),
                     ),
+                    image: banner != null && banner.isNotEmpty
+                        ? DecorationImage(
+                            image: NetworkImage(banner),
+                            fit: BoxFit.cover,
+                          )
+                        : null,
                   ),
                   child: Container(
                     decoration: BoxDecoration(
@@ -59,7 +73,7 @@ class RestaurantReviewsScreen extends ConsumerWidget {
                     width: 64,
                     height: 64,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFE0E0E0),
+                      color: Colors.white,
                       shape: BoxShape.circle,
                       border: Border.all(
                         color: const Color(0xFFE6EFFC),
@@ -73,12 +87,27 @@ class RestaurantReviewsScreen extends ConsumerWidget {
                         ),
                       ],
                     ),
-                    child: const Center(
-                      child: Icon(
-                        Icons.restaurant_menu_rounded,
-                        color: Colors.white,
-                        size: 32,
-                      ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(32),
+                      child: logo != null && logo.isNotEmpty
+                          ? Image.network(
+                              logo,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, _, _) => const Center(
+                                child: Icon(
+                                  Icons.restaurant_menu_rounded,
+                                  color: Color(0xFFBDBDBD),
+                                  size: 32,
+                                ),
+                              ),
+                            )
+                          : const Center(
+                              child: Icon(
+                                Icons.restaurant_menu_rounded,
+                                color: Color(0xFFBDBDBD),
+                                size: 32,
+                              ),
+                            ),
                     ),
                   ),
                 ),
@@ -114,9 +143,9 @@ class RestaurantReviewsScreen extends ConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Text(
-                              '0',
-                              style: TextStyle(
+                            Text(
+                              rating == '0.0' ? 'No Rating' : '$rating ★',
+                              style: const TextStyle(
                                 fontWeight: FontWeight.w700,
                                 fontSize: 24,
                                 height: 1.2,
@@ -124,7 +153,7 @@ class RestaurantReviewsScreen extends ConsumerWidget {
                               ),
                             ),
                             Text(
-                              'Reviews',
+                              '$reviewCount Reviews',
                               style: TextStyle(
                                 fontWeight: FontWeight.w500,
                                 fontSize: 14,

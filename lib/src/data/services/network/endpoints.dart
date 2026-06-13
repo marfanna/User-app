@@ -13,22 +13,21 @@ class Endpoints {
   static const String logout = 'auth/logout';
   static const String registerFCMToken = 'users/fcm/register';
 
-  /// Rider
+  /// Profile
   static const String myProfile = 'users/profile';
   static const String addresses = 'users/addresses';
+  static const String createAddress = 'users/addresses/add';
 
   /// Orders
-  static const String myOrders = 'orders/rider/my-orders';
-  static const String mySummary = 'orders/rider/my-summary';
-  static const String order = 'orders/rider/{orderId}';
-  static const String orderStatus = 'orders/rider/{orderId}/{status}';
-  static const String transferOrder = 'orders/rider/{orderId}/transfer';
-
-  /// Riders
-  static const String franchiseRiders = 'users/franchise/{franchiseId}/riders';
+  static const String order = 'orders/{orderId}';
 
   /// Payments
   static const String initiateBkashPayment = 'payments/bkash/initiate';
   static const String verifyBkashPayment = 'payments/bkash/verify/{paymentID}';
   static const String queryBkashPayment = 'payments/bkash/query/{paymentID}';
+
+  /// Notifications
+  static const String notificationsList = 'notifications/list';
+  static const String notificationMarkRead = 'notifications/{id}/read';
+  static const String notificationMarkAllRead = 'notifications/mark-all-read';
 }

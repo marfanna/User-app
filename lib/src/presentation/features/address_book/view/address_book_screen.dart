@@ -42,7 +42,7 @@ class AddressBookScreen extends ConsumerWidget {
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
                             itemCount: data.addresses.length,
-                            separatorBuilder: (_, __) => const Gap(24),
+                            separatorBuilder: (_, _) => const Gap(24),
                             itemBuilder: (context, index) {
                               final address = data.addresses[index];
                               final isDefault = index == data.defaultAddressIndex;
@@ -52,14 +52,20 @@ class AddressBookScreen extends ConsumerWidget {
                               final subtitle = [address.district, address.division]
                                   .where((s) => s.isNotEmpty).join(', ');
 
+                              final type = address.label ?? address.type ?? 'Home';
+                              
                               return _buildAddressCard(
-                                type: address.type ?? 'Home',
+                                type: type,
                                 title: title.isNotEmpty ? title : 'My Address',
                                 subtitle: subtitle,
                                 isDefault: isDefault,
                                 isSelected: isSelected,
                                 onTap: () {
-                                  ref.read(selectedAddressIndexProvider.notifier).state = index;
+                                  ref
+                                      .read(
+                                        selectedAddressIndexProvider.notifier,
+                                      )
+                                      .set(index);
                                   context.pop();
                                 },
                               );
@@ -227,10 +233,6 @@ class AddressBookScreen extends ConsumerWidget {
 }
 
 class _DashedRectPainter extends CustomPainter {
-  final Color color;
-  final double strokeWidth;
-  final double gap;
-  final double radius;
 
   _DashedRectPainter({
     required this.color,
@@ -238,6 +240,10 @@ class _DashedRectPainter extends CustomPainter {
     required this.gap,
     required this.radius,
   });
+  final Color color;
+  final double strokeWidth;
+  final double gap;
+  final double radius;
 
   @override
   void paint(Canvas canvas, Size size) {

@@ -3,6 +3,24 @@ import 'package:gap/gap.dart';
 
 import '../../models/menu_item.dart';
 
+class _ImagePlaceholder extends StatelessWidget {
+  const _ImagePlaceholder();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 120,
+      width: double.infinity,
+      color: const Color(0xFFF5F5F5),
+      child: const Icon(
+        Icons.restaurant_outlined,
+        size: 40,
+        color: Color(0xFFCCCCCC),
+      ),
+    );
+  }
+}
+
 class FoodGridTile extends StatelessWidget {
   const FoodGridTile({super.key, required this.item, required this.onAddTap});
 
@@ -34,14 +52,20 @@ class FoodGridTile extends StatelessWidget {
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(14),
                   ),
-                  child: Image.network(
-                    item.imageUrl,
-                    height: 120,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) =>
-                        Container(height: 120, color: const Color(0xFFF0F0F0)),
-                  ),
+                  child: item.imageUrl.isNotEmpty
+                      ? Image.network(
+                          item.imageUrl,
+                          height: 120,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, _, _) =>
+                              const _ImagePlaceholder(),
+                          loadingBuilder: (_, child, progress) =>
+                              progress == null
+                                  ? child
+                                  : const _ImagePlaceholder(),
+                        )
+                      : const _ImagePlaceholder(),
                 ),
                 Positioned(
                   bottom: 8,

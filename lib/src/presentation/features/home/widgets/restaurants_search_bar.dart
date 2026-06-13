@@ -19,12 +19,12 @@ class RestaurantsSearchBar extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(37.25),
       ),
-      child: Row(
+      child: const Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          const Icon(Icons.search, color: Color(0xFF898989), size: 18),
-          const Gap(10),
-          const Expanded(
+          Icon(Icons.search, color: Color(0xFF898989), size: 18),
+          Gap(10),
+          Expanded(
             child: Text(
               'Search Restaurants..',
               style: TextStyle(

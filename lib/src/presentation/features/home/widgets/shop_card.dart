@@ -57,13 +57,19 @@ class ShopCard extends StatelessWidget {
                           ),
                         ),
                       ),
-                      const Row(
+                      Row(
                         children: [
-                          Icon(Icons.star, color: Color(0xFFFF6700), size: 20),
-                          Gap(4),
+                          const Icon(
+                            Icons.star,
+                            color: Color(0xFFFF6700),
+                            size: 20,
+                          ),
+                          const Gap(4),
                           Text(
-                            '4.5',
-                            style: TextStyle(
+                            shop.rating != null && shop.rating! > 0
+                                ? shop.rating!.toStringAsFixed(1)
+                                : '0.0',
+                            style: const TextStyle(
                               fontFamily: 'Nunito',
                               fontWeight: FontWeight.w600,
                               fontSize: 16,
@@ -238,6 +244,7 @@ class _NetworkImageWithFallbackState
               width: double.infinity,
               height: widget.height,
               fit: BoxFit.cover,
+              cacheWidth: 800,
               errorBuilder: (_, _, _) {
                 _tryFallback();
                 return Container(color: const Color(0xFFE0E0E0));

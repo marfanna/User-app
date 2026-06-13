@@ -1,16 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:duare_user/src/presentation/core/theme/src/theme_extensions/src/gradients.dart';
+import '../../theme/src/theme_extensions/src/gradients.dart';
 
 class PrimaryGradientButton extends StatelessWidget {
-  final VoidCallback? onPressed;
-  final String text;
-  final Widget? leading;
-  final Widget? trailing;
-  final MainAxisAlignment mainAxisAlignment;
-  final double height;
-  final double borderRadius;
-  final EdgeInsetsGeometry? padding;
-
   const PrimaryGradientButton({
     super.key,
     required this.onPressed,
@@ -22,6 +13,15 @@ class PrimaryGradientButton extends StatelessWidget {
     this.borderRadius = 64,
     this.padding,
   });
+
+  final VoidCallback? onPressed;
+  final String text;
+  final Widget? leading;
+  final Widget? trailing;
+  final MainAxisAlignment mainAxisAlignment;
+  final double height;
+  final double borderRadius;
+  final EdgeInsetsGeometry? padding;
 
   @override
   Widget build(BuildContext context) {

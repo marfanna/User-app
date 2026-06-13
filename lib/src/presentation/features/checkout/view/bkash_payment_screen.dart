@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -64,12 +66,14 @@ class _BkashPaymentScreenState extends ConsumerState<BkashPaymentScreen> {
   }
 
   Future<void> _verifyPayment() async {
-    // Show a loading dialog
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const Center(
-        child: CircularProgressIndicator(color: Colors.white),
+    // Show a loading dialog — intentionally not awaited
+    unawaited(
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(color: Colors.white),
+        ),
       ),
     );
 
@@ -85,7 +89,7 @@ class _BkashPaymentScreenState extends ConsumerState<BkashPaymentScreen> {
           if (data?.transactionStatus == 'Completed') {
             if (mounted) {
               context.pushReplacementNamed(
-                Routes.orderSuccess,
+                Routes.trackOrder,
                 pathParameters: {'id': widget.orderId},
               );
             }

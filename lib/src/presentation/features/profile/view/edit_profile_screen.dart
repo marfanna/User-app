@@ -7,6 +7,7 @@ import 'package:gap/gap.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/di/dependency_injection.dart';
+import '../../../core/theme/src/theme_extensions/src/gradients.dart';
 import '../riverpod/customer_profile_provider.dart';
 
 class EditProfileScreen extends ConsumerStatefulWidget {
@@ -156,7 +157,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       photoWidget = Image.network(
         existingUrl,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, _) =>
+        errorBuilder: (_, _, _) =>
             const Icon(Icons.person, color: Colors.white, size: 48),
       );
     } else {
@@ -277,11 +278,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             height: 56,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              gradient: const RadialGradient(
-                center: Alignment(-0.27, -0.27),
-                radius: 1.53,
-                colors: [Color(0xFF0156A7), Color(0xFF2E3293)],
-              ),
+              gradient: AppGradients.primaryRadial,
               borderRadius: BorderRadius.circular(4),
             ),
             child: _saving

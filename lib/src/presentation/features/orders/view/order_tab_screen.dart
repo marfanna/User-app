@@ -4,6 +4,9 @@ import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/router/routes.dart';
+import '../../../core/widgets/toast.dart';
+import '../../../../core/base/base.dart';
+import '../../../../core/di/dependency_injection.dart';
 import '../models/customer_order_model.dart';
 import '../riverpod/customer_orders_provider.dart';
 
@@ -31,7 +34,7 @@ class OrderTabScreen extends ConsumerWidget {
             Expanded(
               child: async.when(
                 loading: () => _buildSkeleton(),
-                error: (_, __) => const Center(
+                error: (_, _) => const Center(
                   child: Text(
                     'Failed to load orders',
                     style: TextStyle(
@@ -57,10 +60,10 @@ class OrderTabScreen extends ConsumerWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Column(
+          const Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'Category',
                 style: TextStyle(
                   fontFamily: 'Manrope',
@@ -71,10 +74,10 @@ class OrderTabScreen extends ConsumerWidget {
                   color: Color(0xFF040707),
                 ),
               ),
-              const Gap(6),
+              Gap(6),
               Row(
                 children: [
-                  const Text(
+                  Text(
                     'Restaurants',
                     style: TextStyle(
                       fontFamily: 'Manrope',
@@ -85,8 +88,8 @@ class OrderTabScreen extends ConsumerWidget {
                       color: Color(0xFF040707),
                     ),
                   ),
-                  const Gap(4),
-                  const Icon(
+                  Gap(4),
+                  Icon(
                     Icons.expand_more,
                     color: Color(0xFF1C1B1F),
                     size: 24,
@@ -136,12 +139,13 @@ class OrderTabScreen extends ConsumerWidget {
           if (orders.isEmpty)
             _buildEmpty()
           else
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: orders.length,
-              separatorBuilder: (_, __) => const Gap(2),
-              itemBuilder: (_, i) => _OrderCard(order: orders[i]),
+            Column(
+              children: [
+                for (int i = 0; i < orders.length; i++) ...[
+                  if (i > 0) const Gap(2),
+                  _OrderCard(order: orders[i]),
+                ],
+              ],
             ),
         ],
       ),
@@ -203,33 +207,67 @@ class OrderTabScreen extends ConsumerWidget {
   }
 }
 
-class _OrderCard extends StatelessWidget {
+class _OrderCard extends ConsumerStatefulWidget {
   const _OrderCard({required this.order});
 
   final CustomerOrderModel order;
 
+  @override
+  ConsumerState<_OrderCard> createState() => _OrderCardState();
+}
+
+class _OrderCardState extends ConsumerState<_OrderCard> {
+  bool _payLoading = false;
+
   String _formatDate(DateTime dt) {
     const months = [
-      'JAN',
-      'FEB',
-      'MAR',
-      'APR',
-      'MAY',
-      'JUN',
-      'JUL',
-      'AUG',
-      'SEP',
-      'OCT',
-      'NOV',
-      'DEC',
+      'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
+      'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC',
     ];
     final h = dt.hour.toString().padLeft(2, '0');
     final m = dt.minute.toString().padLeft(2, '0');
     return '${dt.day} ${months[dt.month - 1]}, $h:$m';
   }
 
+  Future<void> _handlePay() async {
+    setState(() => _payLoading = true);
+    try {
+      final repo = ref.read(bkashRepositoryProvider);
+      final result = await repo.initiatePayment(
+        orderId: widget.order.id,
+        amount: widget.order.total,
+      );
+      if (!mounted) return;
+      result.when(
+        success: (data) {
+          if (data?.checkoutUrl != null) {
+            context.pushNamed(
+              Routes.bkashPayment,
+              extra: {
+                'checkoutUrl': data!.checkoutUrl!,
+                'paymentId': data.paymentID!,
+                'orderId': widget.order.id,
+              },
+            );
+          } else {
+            Toast.error(context, 'Failed to get bKash checkout URL');
+          }
+        },
+        error: (failure) {
+          final msg = failure.message.contains('already in progress')
+              ? 'Payment pending — open bKash app to complete'
+              : 'Payment failed: ${failure.message}';
+          Toast.error(context, msg, duration: const Duration(seconds: 4));
+        },
+      );
+    } finally {
+      if (mounted) setState(() => _payLoading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final order = widget.order;
     return Container(
       padding: const EdgeInsets.fromLTRB(10, 10, 16, 10),
       decoration: BoxDecoration(
@@ -317,7 +355,13 @@ class _OrderCard extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: _GradientButton(label: 'Re-order', onTap: () {}),
+                child: order.needsPayment
+                    ? _GradientButton(
+                        label: _payLoading ? 'Loading...' : 'Pay Now',
+                        color: const Color(0xFFE2136E),
+                        onTap: _payLoading ? () {} : _handlePay,
+                      )
+                    : _GradientButton(label: 'Re-order', onTap: () {}),
               ),
               const Gap(10),
               Expanded(
@@ -338,10 +382,15 @@ class _OrderCard extends StatelessWidget {
 }
 
 class _GradientButton extends StatelessWidget {
-  const _GradientButton({required this.label, required this.onTap});
+  const _GradientButton({
+    required this.label,
+    required this.onTap,
+    this.color,
+  });
 
   final String label;
   final VoidCallback onTap;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
@@ -351,10 +400,12 @@ class _GradientButton extends StatelessWidget {
         height: 40,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          gradient: const RadialGradient(
-            center: Alignment(-0.27, -0.27),
+          gradient: RadialGradient(
+            center: const Alignment(-0.27, -0.27),
             radius: 1.53,
-            colors: [Color(0xFF0156A7), Color(0xFF2E3293)],
+            colors: color != null
+                ? [color!, color!]
+                : const [Color(0xFF0156A7), Color(0xFF2E3293)],
           ),
           borderRadius: BorderRadius.circular(4),
         ),

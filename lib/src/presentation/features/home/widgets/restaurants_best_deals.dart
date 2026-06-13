@@ -18,7 +18,7 @@ class RestaurantsBestDeals extends ConsumerWidget {
 
     return async.when(
       loading: () => _buildSkeleton(),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
       data: (items) {
         if (items.isEmpty) return const SizedBox.shrink();
         return Column(
@@ -41,7 +41,7 @@ class RestaurantsBestDeals extends ConsumerWidget {
                 scrollDirection: Axis.horizontal,
                 clipBehavior: Clip.none,
                 itemCount: items.length,
-                separatorBuilder: (_, __) => const Gap(16),
+                separatorBuilder: (_, _) => const Gap(16),
                 itemBuilder: (_, i) => _DealCard(item: items[i]),
               ),
             ),
@@ -70,8 +70,8 @@ class RestaurantsBestDeals extends ConsumerWidget {
             scrollDirection: Axis.horizontal,
             clipBehavior: Clip.none,
             itemCount: 3,
-            separatorBuilder: (_, __) => const Gap(16),
-            itemBuilder: (_, __) => _SkeletonDealCard(),
+            separatorBuilder: (_, _) => const Gap(16),
+            itemBuilder: (_, _) => _SkeletonDealCard(),
           ),
         ),
       ],
@@ -217,7 +217,7 @@ class _ItemImageState extends State<_ItemImage> {
                 width: 231,
                 height: 140,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) {
+                errorBuilder: (_, _, _) {
                   if (!_primaryFailed &&
                       widget.fallbackUrl != null &&
                       widget.fallbackUrl!.isNotEmpty) {

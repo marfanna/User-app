@@ -12,10 +12,10 @@ class WalletScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         leading: const RoundedBackButton.primary(),
-        title: TitleText.large('Wallet & Payments'),
+        title: const TitleText.large('Wallet & Payments'),
         centerTitle: true,
       ),
-      body: Center(
+      body: const Center(
         child: BodyText.medium('Wallet and Payment options will be here.'),
       ),
     );

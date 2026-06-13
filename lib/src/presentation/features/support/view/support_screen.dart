@@ -12,10 +12,10 @@ class SupportScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         leading: const RoundedBackButton.primary(),
-        title: TitleText.large('Help & Support'),
+        title: const TitleText.large('Help & Support'),
         centerTitle: true,
       ),
-      body: Center(
+      body: const Center(
         child: BodyText.medium('Help and support options will be here.'),
       ),
     );

@@ -1,7 +1,9 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../../../core/router/routes.dart';
 import '../../../core/theme/theme.dart';
@@ -49,6 +51,13 @@ class _RestaurantDetailScreenState
   String _cachedShopName = '';
   final Map<String, ApiMenuItemData> _rawItems = {};
 
+  // ── Shop map ──────────────────────────────────────────────────
+  double? _shopLat;
+  double? _shopLng;
+  bool _geocoding = false;
+  GoogleMapController? _shopMapController;
+  final _geocodingDio = Dio();
+
   @override
   void initState() {
     super.initState();
@@ -65,7 +74,36 @@ class _RestaurantDetailScreenState
       ..dispose();
     _featuredPageCtrl.dispose();
     _searchCtrl.dispose();
+    _geocodingDio.close();
+    _shopMapController?.dispose();
     super.dispose();
+  }
+
+  Future<void> _ensureShopCoords(String address) async {
+    if (_shopLat != null || _geocoding || address.isEmpty) return;
+    setState(() => _geocoding = true);
+    try {
+      final response = await _geocodingDio.get(
+        'https://maps.googleapis.com/maps/api/geocode/json',
+        queryParameters: {
+          'address': address,
+          'key': 'AIzaSyBU7GqUxT98kSlVbD0iFMijQOQFZUbgA7Q',
+          'components': 'country:BD',
+        },
+      );
+      final results = response.data['results'] as List?;
+      if (results != null && results.isNotEmpty && mounted) {
+        final loc = results.first['geometry']['location'];
+        setState(() {
+          _shopLat = (loc['lat'] as num).toDouble();
+          _shopLng = (loc['lng'] as num).toDouble();
+        });
+      }
+    } catch (_) {
+      // geocoding failed — map stays unavailable
+    } finally {
+      if (mounted) setState(() => _geocoding = false);
+    }
   }
 
   GlobalKey _keyFor(String catId) =>
@@ -197,7 +235,7 @@ class _RestaurantDetailScreenState
                           ),
                         ),
                         loading: () => _skeleton(160, 28),
-                        error: (_, __) => const SizedBox.shrink(),
+                        error: (_, _) => const SizedBox.shrink(),
                       ),
                       const Gap(6),
                       // Location row
@@ -243,7 +281,7 @@ class _RestaurantDetailScreenState
                           ],
                         ),
                         loading: () => _skeleton(220, 16),
-                        error: (_, __) => const SizedBox.shrink(),
+                        error: (_, _) => const SizedBox.shrink(),
                       ),
                       const Gap(16),
                       _buildDeliveryPickupCard(restaurantAsync),
@@ -301,7 +339,7 @@ class _RestaurantDetailScreenState
                       restaurantAsync.when(
                         data: (r) => _buildRatingCard(r),
                         loading: () => _skeleton(double.infinity, 56),
-                        error: (_, __) => const SizedBox.shrink(),
+                        error: (_, _) => const SizedBox.shrink(),
                       ),
                       const Gap(20),
                     ],
@@ -330,7 +368,7 @@ class _RestaurantDetailScreenState
                               _buildTabItem(i, tabs[i], menu),
                         ),
                         loading: () => const SizedBox.shrink(),
-                        error: (_, __) => const SizedBox.shrink(),
+                        error: (_, _) => const SizedBox.shrink(),
                       ),
                     ),
                     const Divider(height: 1, color: Color(0xFFEBEBEB)),
@@ -348,7 +386,7 @@ class _RestaurantDetailScreenState
                 padding: EdgeInsets.all(48),
                 child: Center(child: CircularProgressIndicator()),
               ),
-              error: (_, __) => const Padding(
+              error: (_, _) => const Padding(
                 padding: EdgeInsets.all(48),
                 child: Center(
                   child: Text(
@@ -469,7 +507,7 @@ class _RestaurantDetailScreenState
                   ? Image.network(
                       logo,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => const Icon(
+                      errorBuilder: (_, _, _) => const Icon(
                         Icons.restaurant,
                         size: 32,
                         color: Color(0xFFBDBDBD),
@@ -551,7 +589,10 @@ class _RestaurantDetailScreenState
                       ),
                     ),
                     GestureDetector(
-                      onTap: () => setState(() => _isDelivery = false),
+                      onTap: () {
+                        setState(() => _isDelivery = false);
+                        _ensureShopCoords(address);
+                      },
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 200),
                         padding: const EdgeInsets.symmetric(
@@ -670,33 +711,70 @@ class _RestaurantDetailScreenState
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  height: 140,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFF5F5F5),
-                    borderRadius: BorderRadius.vertical(
-                      top: Radius.circular(12),
-                    ),
+                ClipRRect(
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(12),
                   ),
-                  child: const Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.location_on,
-                          size: 36,
-                          color: Color(0xFFCCCCCC),
-                        ),
-                        Gap(6),
-                        Text(
-                          'Map unavailable',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Color(0xFF9EA3B0),
+                  child: SizedBox(
+                    height: 140,
+                    child: _geocoding
+                        ? const ColoredBox(
+                            color: Color(0xFFF5F5F5),
+                            child: Center(
+                              child: SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Color(0xFF0156A7),
+                                ),
+                              ),
+                            ),
+                          )
+                        : _shopLat != null && _shopLng != null
+                        ? GoogleMap(
+                            initialCameraPosition: CameraPosition(
+                              target: LatLng(_shopLat!, _shopLng!),
+                              zoom: 15,
+                            ),
+                            onMapCreated: (c) => _shopMapController = c,
+                            markers: {
+                              Marker(
+                                markerId: const MarkerId('shop'),
+                                position: LatLng(_shopLat!, _shopLng!),
+                              ),
+                            },
+                            myLocationEnabled: false,
+                            myLocationButtonEnabled: false,
+                            zoomControlsEnabled: false,
+                            mapToolbarEnabled: false,
+                            scrollGesturesEnabled: false,
+                            rotateGesturesEnabled: false,
+                            tiltGesturesEnabled: false,
+                          )
+                        : const ColoredBox(
+                            color: Color(0xFFF5F5F5),
+                            child: Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.location_on,
+                                    size: 36,
+                                    color: Color(0xFFCCCCCC),
+                                  ),
+                                  Gap(6),
+                                  Text(
+                                    'Map unavailable',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Color(0xFF9EA3B0),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
                   ),
                 ),
                 Padding(
@@ -791,7 +869,7 @@ class _RestaurantDetailScreenState
             ],
           ),
           TextButton(
-            onPressed: () => context.push(Routes.restaurantReviews),
+            onPressed: () => context.push(Routes.restaurantReviews, extra: r),
             style: TextButton.styleFrom(
               padding: EdgeInsets.zero,
               minimumSize: Size.zero,
@@ -971,7 +1049,7 @@ class _RestaurantDetailScreenState
               key: _mostOrderedKey,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SectionHeader(
+                const SectionHeader(
                   title: 'Most Ordered',
                   subtitle:
                       'The most commonly ordered items and dishes from this store',
@@ -1009,18 +1087,22 @@ class _RestaurantDetailScreenState
               children: [
                 SectionHeader(title: cat.name),
                 const Gap(16),
-                ListView.separated(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: items.length,
-                  separatorBuilder: (_, __) => const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 12),
-                    child: Divider(color: Color(0xFFF0F0F0), height: 1),
-                  ),
-                  itemBuilder: (_, i) => MenuListItem(
-                    item: items[i],
-                    onAddTap: () => _openAddFood(items[i]),
-                  ),
+                Column(
+                  children: [
+                    for (int i = 0; i < items.length; i++) ...[
+                      if (i > 0) const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 12),
+                        child: Divider(
+                          color: Color(0xFFF0F0F0),
+                          height: 1,
+                        ),
+                      ),
+                      MenuListItem(
+                        item: items[i],
+                        onAddTap: () => _openAddFood(items[i]),
+                      ),
+                    ],
+                  ],
                 ),
               ],
             ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:math' as math;
+import 'package:confetti/confetti.dart';
 
 import '../../../core/widgets/gradient_background.dart';
 import '../../../core/widgets/app_bar/duare_app_bar.dart';
@@ -9,42 +10,87 @@ import '../../../core/theme/src/theme_extensions/src/gradients.dart';
 import '../../../core/widgets/button/primary_gradient_button.dart';
 import '../../../core/router/routes.dart';
 
-class OrderSuccessScreen extends StatelessWidget {
-  final String orderId;
+class OrderSuccessScreen extends StatefulWidget {
 
   const OrderSuccessScreen({super.key, required this.orderId});
+  final String orderId;
+
+  @override
+  State<OrderSuccessScreen> createState() => _OrderSuccessScreenState();
+}
+
+class _OrderSuccessScreenState extends State<OrderSuccessScreen> {
+  late ConfettiController _confettiController;
+
+  @override
+  void initState() {
+    super.initState();
+    _confettiController = ConfettiController(duration: const Duration(seconds: 3));
+    // Start the celebration when the screen opens
+    _confettiController.play();
+  }
+
+  @override
+  void dispose() {
+    _confettiController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: GradientBackground(
         child: SafeArea(
-          child: Column(
+          child: Stack(
             children: [
-              const DuareAppBar(title: 'Success'),
-              Expanded(
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _buildIllustration(),
-                      const Gap(30),
-                      const Text(
-                        'Your Order\nHas Placed',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 41,
-                          height: 1.28,
-                          letterSpacing: -1,
-                          color: Color(0xFF040707),
-                        ),
+              Column(
+                children: [
+                  const DuareAppBar(title: 'Success'),
+                  Expanded(
+                    child: Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _buildIllustration(),
+                          const Gap(30),
+                          const Text(
+                            'Your Order\nHas Placed',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 41,
+                              height: 1.28,
+                              letterSpacing: -1,
+                              color: Color(0xFF040707),
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
+                  _buildBottomBar(context),
+                ],
+              ),
+              // Confetti Overlay
+              Align(
+                alignment: Alignment.topCenter,
+                child: ConfettiWidget(
+                  confettiController: _confettiController,
+                  blastDirection: math.pi / 2, // falls straight down
+                  maxBlastForce: 20, 
+                  minBlastForce: 5,
+                  emissionFrequency: 0.05,
+                  numberOfParticles: 30, // a good burst
+                  gravity: 0.2,
+                  colors: const [
+                    Colors.green,
+                    Colors.blue,
+                    Colors.pink,
+                    Colors.orange,
+                    Colors.purple
+                  ],
                 ),
               ),
-              _buildBottomBar(context),
             ],
           ),
         ),
@@ -140,7 +186,7 @@ class OrderSuccessScreen extends StatelessWidget {
         onPressed: () {
           context.pushNamed(
             Routes.trackOrder,
-            pathParameters: {'id': orderId},
+            pathParameters: {'id': widget.orderId},
           );
         },
       ),

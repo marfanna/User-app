@@ -4,6 +4,7 @@ import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../../core/di/dependency_injection.dart';
+import '../../../../core/theme/src/theme_extensions/src/gradients.dart';
 import '../../../../../data/services/cache/cache_service.dart';
 import '../../../../core/router/routes.dart';
 import '../../../../core/widgets/gradient_background.dart';
@@ -108,7 +109,7 @@ class _SelectAreaScreenState extends ConsumerState<SelectAreaScreen> {
                 const Gap(24),
                 async.when(
                   loading: () =>
-                      _AreaButton(label: 'Loading areas...', onTap: null),
+                      const _AreaButton(label: 'Loading areas...', onTap: null),
                   error: (e, _) => _AreaButton(
                     label: 'Failed to load — tap to retry',
                     onTap: () => ref.refresh(franchisesProvider),
@@ -209,11 +210,7 @@ class _SubmitButton extends StatelessWidget {
         width: double.infinity,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(4),
-          gradient: const RadialGradient(
-            center: Alignment(-0.27, -0.27),
-            radius: 1.53,
-            colors: [Color(0xFF0156A7), Color(0xFF2E3293)],
-          ),
+          gradient: AppGradients.primaryRadial,
         ),
         alignment: Alignment.center,
         child: const Text(

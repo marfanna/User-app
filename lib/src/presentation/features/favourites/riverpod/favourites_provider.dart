@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/di/dependency_injection.dart';
 import '../../home/models/shop_data.dart';
+import '../../restaurant_detail/models/restaurant_api_models.dart';
 
 final favouriteShopsProvider =
     FutureProvider.autoDispose<List<ShopData>>((ref) async {
@@ -35,5 +36,35 @@ final favouriteShopsProvider =
       isPaused: isPaused,
       pauseReason: pause?['pauseReason'] as String?,
     );
+  }).toList();
+});
+
+final favouriteProductsProvider =
+    FutureProvider.autoDispose<List<({ApiMenuItemData item, String shopName, String shopId})>>((ref) async {
+  final dio = ref.read(dioProvider);
+  final response = await dio.get('users/favourite-products');
+  final body = response.data as Map<String, dynamic>;
+  final raw = body['data'];
+
+  List<dynamic> list;
+  if (raw is List) {
+    list = raw;
+  } else {
+    list = [];
+  }
+
+  return list.whereType<Map<String, dynamic>>().map((json) {
+    final itemJson = {
+      'id': (json['itemId'] ?? json['_id'] ?? json['id'] ?? '') as String,
+      'name': (json['name'] ?? '') as String,
+      'price': json['price'] ?? 0.0,
+      'image': json['image'] as String?,
+      'description': json['description'] as String?,
+      'isAvailable': true,
+    };
+    final item = ApiMenuItemData.fromJson(itemJson);
+    final shopName = (json['shopName'] ?? '') as String;
+    final shopId = (json['shopId'] ?? '') as String;
+    return (item: item, shopName: shopName, shopId: shopId);
   }).toList();
 });

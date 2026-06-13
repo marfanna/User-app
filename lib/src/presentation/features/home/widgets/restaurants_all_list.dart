@@ -33,17 +33,18 @@ class RestaurantsAllList extends ConsumerWidget {
               ),
             ),
             const Gap(16),
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              padding: EdgeInsets.zero,
-              itemCount: shops.length,
-              separatorBuilder: (_, _) => const Gap(16),
-              itemBuilder: (_, i) => ShopCard(
-                shop: shops[i],
-                onTap: () =>
-                    context.push(Routes.restaurantDetailPath(shops[i].id)),
-              ),
+            Column(
+              children: [
+                for (int i = 0; i < shops.length; i++) ...[
+                  if (i > 0) const Gap(16),
+                  ShopCard(
+                    shop: shops[i],
+                    onTap: () => context.push(
+                      Routes.restaurantDetailPath(shops[i].id),
+                    ),
+                  ),
+                ],
+              ],
             ),
           ],
         );
@@ -64,12 +65,13 @@ class RestaurantsAllList extends ConsumerWidget {
           ),
         ),
         const Gap(16),
-        ListView.separated(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: _skeletonCount,
-          separatorBuilder: (_, _) => const Gap(16),
-          itemBuilder: (_, _) => const _SkeletonCard(),
+        Column(
+          children: [
+            for (int i = 0; i < _skeletonCount; i++) ...[
+              if (i > 0) const Gap(16),
+              const _SkeletonCard(),
+            ],
+          ],
         ),
       ],
     );

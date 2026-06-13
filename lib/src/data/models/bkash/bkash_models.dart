@@ -6,19 +6,20 @@ part 'bkash_models.mapper.dart';
 class BkashPaymentResponseModel with BkashPaymentResponseModelMappable {
   const BkashPaymentResponseModel({
     this.paymentID,
-    this.checkoutURL,
+    this.checkoutUrl,
     this.amount,
     this.merchantInvoiceNumber,
   });
 
   final String? paymentID;
-  final String? checkoutURL;
+  final String? checkoutUrl;
   final String? amount;
   final String? merchantInvoiceNumber;
 }
 
 @MappableClass(caseStyle: CaseStyle.camelCase)
-class BkashVerificationResponseModel with BkashVerificationResponseModelMappable {
+class BkashVerificationResponseModel
+    with BkashVerificationResponseModelMappable {
   const BkashVerificationResponseModel({
     this.paymentID,
     this.trxID,

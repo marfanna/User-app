@@ -15,19 +15,22 @@ class RouterState extends _$RouterState {
   String? build() {
     ref.listen(appStartupProvider, (_, state) {
       if (!(state.isLoading || state.hasError)) {
-        decideNextRoute();
+        unawaited(decideNextRoute());
       }
     });
 
     return Routes.initial;
   }
 
-  void decideNextRoute() {
+  Future<void> decideNextRoute() async {
     final isLoggedIn = ref.read(getUserLoginStatusUseCaseProvider).call();
 
     if (state == Routes.initial) {
       state = Routes.splash;
-      Timer(const Duration(milliseconds: 500), () => decideNextRoute());
+      Timer(
+        const Duration(milliseconds: 500),
+        () => unawaited(decideNextRoute()),
+      );
       return;
     }
 
@@ -38,8 +41,43 @@ class RouterState extends _$RouterState {
 
     final cache = ref.read(cacheServiceProvider);
     final franchiseId = cache.get<String>(CacheKey.selectedFranchiseId);
-    state = (franchiseId == null || franchiseId.isEmpty)
-        ? Routes.selectArea
-        : Routes.home;
+
+    if (franchiseId == null || franchiseId.isEmpty) {
+      state = Routes.selectArea;
+      return;
+    }
+
+    // Validate cached franchise ID is still active in the backend.
+    // If the ID was deleted or changed in the DB, user gets blank home screen.
+    // On API failure (offline) we trust the cached ID and go home anyway.
+    final isValid = await _isFranchiseValid(franchiseId);
+    if (!isValid) {
+      await cache.remove([
+        CacheKey.selectedFranchiseId,
+        CacheKey.selectedFranchiseName,
+      ]);
+    }
+    state = isValid ? Routes.home : Routes.selectArea;
+  }
+
+  Future<bool> _isFranchiseValid(String franchiseId) async {
+    try {
+      final dio = ref.read(dioProvider);
+      final response = await dio.get('franchises/get-all-franchise');
+      final body = response.data as Map<String, dynamic>;
+      final raw = body['data'];
+      final list = raw is List
+          ? raw
+          : (raw is Map && raw['franchises'] is List
+              ? raw['franchises'] as List<dynamic>
+              : <dynamic>[]);
+      return list
+          .whereType<Map<String, dynamic>>()
+          .any((f) =>
+              f['_id']?.toString() == franchiseId &&
+              f['isActive'] == true);
+    } catch (_) {
+      return true;
+    }
   }
 }

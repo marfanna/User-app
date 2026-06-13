@@ -1,11 +1,6 @@
 import 'package:flutter/material.dart';
 
 class DuareCard extends StatelessWidget {
-  final Widget child;
-  final EdgeInsetsGeometry? padding;
-  final EdgeInsetsGeometry? margin;
-  final double borderRadius;
-  final Color? backgroundColor;
 
   const DuareCard({
     super.key,
@@ -15,6 +10,11 @@ class DuareCard extends StatelessWidget {
     this.borderRadius = 10,
     this.backgroundColor = Colors.white,
   });
+  final Widget child;
+  final EdgeInsetsGeometry? padding;
+  final EdgeInsetsGeometry? margin;
+  final double borderRadius;
+  final Color? backgroundColor;
 
   @override
   Widget build(BuildContext context) {

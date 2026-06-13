@@ -1,6 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../models/cart_item_model.dart';
 import '../../restaurant_detail/models/restaurant_api_models.dart';
+import '../../../../data/services/analytics/analytics_service.dart';
 import 'package:flutter/foundation.dart';
 
 part 'cart_provider.g.dart';
@@ -47,6 +48,14 @@ class CartNotifier extends _$CartNotifier {
       );
       state = [...state, newItem];
     }
+
+    AnalyticsService.instance.logAddToCart(
+      itemId: item.id,
+      itemName: item.name,
+      price: selectedVariant?.price ?? item.price,
+      quantity: quantity,
+      category: shopName,
+    );
   }
 
   void updateQuantity(String cartItemId, int newQuantity) {

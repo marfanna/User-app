@@ -13,6 +13,7 @@ import '../../features/onboarding/enter_name/view/enter_name_screen.dart';
 import '../../features/onboarding/select_area/view/select_area_screen.dart';
 import '../../features/explore/view/explore_screen.dart';
 import '../../features/home/view/restaurants_home_screen.dart';
+import '../../features/restaurant_detail/models/restaurant_api_models.dart';
 import '../../features/restaurant_detail/view/restaurant_detail_screen.dart';
 import '../../features/restaurant_detail/view/restaurant_reviews_screen.dart';
 import '../../features/cart/view/cart_screen.dart';
@@ -121,8 +122,12 @@ GoRouter goRouter(Ref ref) {
       GoRoute(
         path: Routes.restaurantReviews,
         name: Routes.restaurantReviews,
-        pageBuilder: (context, state) =>
-            const NoTransitionPage(child: RestaurantReviewsScreen()),
+        pageBuilder: (context, state) {
+          final restaurant = state.extra as RestaurantData?;
+          return NoTransitionPage(
+            child: RestaurantReviewsScreen(restaurant: restaurant),
+          );
+        },
       ),
       GoRoute(
         path: Routes.cart,

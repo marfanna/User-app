@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/di/dependency_injection.dart';
 import '../../../../data/services/cache/cache_service.dart';
 import '../models/shop_data.dart';
+import 'categories_provider.dart';
 
 final restaurantsProvider = FutureProvider.autoDispose<List<ShopData>>((
   ref,
@@ -11,12 +12,14 @@ final restaurantsProvider = FutureProvider.autoDispose<List<ShopData>>((
   final franchiseId = cache.get<String>(CacheKey.selectedFranchiseId);
   if (franchiseId == null || franchiseId.isEmpty) return [];
 
+  final selectedCategory = ref.watch(selectedCategoryProvider);
+
   final dio = ref.read(dioProvider);
   final response = await dio.get(
     'shops/public/get-all-shops',
     queryParameters: {
       'franchise': franchiseId,
-      'category': 'restaurant',
+      'category': selectedCategory,
       'isActive': 'true',
       'status': 'active',
       'limit': '50',

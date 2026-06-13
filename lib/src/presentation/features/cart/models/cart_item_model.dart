@@ -2,13 +2,6 @@ import 'package:flutter/foundation.dart';
 import '../../restaurant_detail/models/restaurant_api_models.dart';
 
 class CartItemModel {
-  final String id;
-  final ApiMenuItemData item;
-  final String shopName;
-  final String shopId;
-  final MenuItemVariant? selectedVariant;
-  final Map<String, String> selectedChoices;
-  final int quantity;
 
   CartItemModel({
     required this.id,
@@ -19,6 +12,13 @@ class CartItemModel {
     required this.selectedChoices,
     required this.quantity,
   });
+  final String id;
+  final ApiMenuItemData item;
+  final String shopName;
+  final String shopId;
+  final MenuItemVariant? selectedVariant;
+  final Map<String, String> selectedChoices;
+  final int quantity;
 
   double get basePrice => selectedVariant?.price ?? item.price;
 

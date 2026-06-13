@@ -20,6 +20,10 @@ class OrderEntity {
     this.orderDate,
     this.createdAt,
     this.updatedAt,
+    this.confirmedAt,
+    this.preparingAt,
+    this.pickedUpAt,
+    this.deliveredAt,
   });
 
   final String id;
@@ -36,12 +40,30 @@ class OrderEntity {
   final String paymentMethod;
   final String paymentStatus;
   final String status;
-  final String? assignedRider;
+  final RiderEntity? assignedRider;
   final double tip;
   final double bonus;
   final DateTime? orderDate;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  final DateTime? confirmedAt;
+  final DateTime? preparingAt;
+  final DateTime? pickedUpAt;
+  final DateTime? deliveredAt;
+}
+
+class RiderEntity {
+  const RiderEntity({
+    required this.id,
+    required this.name,
+    required this.phone,
+    this.profileImage,
+  });
+
+  final String id;
+  final String name;
+  final String phone;
+  final String? profileImage;
 }
 
 class FranchiseEntity {
@@ -150,6 +172,7 @@ class AddressEntity {
   const AddressEntity({
     this.id,
     this.type,
+    this.label,
     required this.street,
     required this.city,
     required this.district,
@@ -161,6 +184,7 @@ class AddressEntity {
 
   final String? id;
   final String? type;
+  final String? label;
   final String street;
   final String city;
   final String district;

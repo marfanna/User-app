@@ -32,11 +32,10 @@ class BkashPaymentResponseModelMapper
     key: r'paymentId',
     opt: true,
   );
-  static String? _$checkoutURL(BkashPaymentResponseModel v) => v.checkoutURL;
-  static const Field<BkashPaymentResponseModel, String> _f$checkoutURL = Field(
-    'checkoutURL',
-    _$checkoutURL,
-    key: r'checkoutUrl',
+  static String? _$checkoutUrl(BkashPaymentResponseModel v) => v.checkoutUrl;
+  static const Field<BkashPaymentResponseModel, String> _f$checkoutUrl = Field(
+    'checkoutUrl',
+    _$checkoutUrl,
     opt: true,
   );
   static String? _$amount(BkashPaymentResponseModel v) => v.amount;
@@ -57,7 +56,7 @@ class BkashPaymentResponseModelMapper
   @override
   final MappableFields<BkashPaymentResponseModel> fields = const {
     #paymentID: _f$paymentID,
-    #checkoutURL: _f$checkoutURL,
+    #checkoutUrl: _f$checkoutUrl,
     #amount: _f$amount,
     #merchantInvoiceNumber: _f$merchantInvoiceNumber,
   };
@@ -65,7 +64,7 @@ class BkashPaymentResponseModelMapper
   static BkashPaymentResponseModel _instantiate(DecodingData data) {
     return BkashPaymentResponseModel(
       paymentID: data.dec(_f$paymentID),
-      checkoutURL: data.dec(_f$checkoutURL),
+      checkoutUrl: data.dec(_f$checkoutUrl),
       amount: data.dec(_f$amount),
       merchantInvoiceNumber: data.dec(_f$merchantInvoiceNumber),
     );
@@ -147,7 +146,7 @@ abstract class BkashPaymentResponseModelCopyWith<
     implements ClassCopyWith<$R, $In, $Out> {
   $R call({
     String? paymentID,
-    String? checkoutURL,
+    String? checkoutUrl,
     String? amount,
     String? merchantInvoiceNumber,
   });
@@ -168,13 +167,13 @@ class _BkashPaymentResponseModelCopyWithImpl<$R, $Out>
   @override
   $R call({
     Object? paymentID = $none,
-    Object? checkoutURL = $none,
+    Object? checkoutUrl = $none,
     Object? amount = $none,
     Object? merchantInvoiceNumber = $none,
   }) => $apply(
     FieldCopyWithData({
       if (paymentID != $none) #paymentID: paymentID,
-      if (checkoutURL != $none) #checkoutURL: checkoutURL,
+      if (checkoutUrl != $none) #checkoutUrl: checkoutUrl,
       if (amount != $none) #amount: amount,
       if (merchantInvoiceNumber != $none)
         #merchantInvoiceNumber: merchantInvoiceNumber,
@@ -184,7 +183,7 @@ class _BkashPaymentResponseModelCopyWithImpl<$R, $Out>
   BkashPaymentResponseModel $make(CopyWithData data) =>
       BkashPaymentResponseModel(
         paymentID: data.get(#paymentID, or: $value.paymentID),
-        checkoutURL: data.get(#checkoutURL, or: $value.checkoutURL),
+        checkoutUrl: data.get(#checkoutUrl, or: $value.checkoutUrl),
         amount: data.get(#amount, or: $value.amount),
         merchantInvoiceNumber: data.get(
           #merchantInvoiceNumber,

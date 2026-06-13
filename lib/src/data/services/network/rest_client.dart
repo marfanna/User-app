@@ -28,41 +28,8 @@ abstract class RestClient {
   @POST(Endpoints.registerFCMToken)
   Future<HttpResponse> registerFCMToken(@Body() Map<String, dynamic> request);
 
-  @GET(Endpoints.myOrders)
-  Future<HttpResponse> myOrders({
-    @Query('page') required int page,
-    @Query('limit') int limit = 10,
-    @Query('status') String? status,
-    @Query('sort') String sort = '-createdAt',
-  });
-
-  @GET(Endpoints.mySummary)
-  Future<HttpResponse> mySummary();
-
   @GET(Endpoints.order)
   Future<HttpResponse> order(@Path('orderId') String orderId);
-
-  @PATCH(Endpoints.orderStatus)
-  Future<HttpResponse> orderStatus(
-    @Path('orderId') String orderId,
-    @Path('status') String status, {
-    @Body() Map<String, dynamic>? body,
-  });
-
-  @PATCH(Endpoints.order)
-  Future<HttpResponse> updateOrder(
-    @Path('orderId') String orderId,
-    @Body() Map<String, dynamic> body,
-  );
-
-  @GET(Endpoints.franchiseRiders)
-  Future<HttpResponse> franchiseRiders(@Path('franchiseId') String franchiseId);
-
-  @PATCH(Endpoints.transferOrder)
-  Future<HttpResponse> transferOrder(
-    @Path('orderId') String orderId,
-    @Body() Map<String, dynamic> body,
-  );
 
   @POST(Endpoints.initiateBkashPayment)
   Future<HttpResponse> initiateBkashPayment(@Body() Map<String, dynamic> request);
@@ -72,4 +39,15 @@ abstract class RestClient {
 
   @GET(Endpoints.queryBkashPayment)
   Future<HttpResponse> queryBkashPayment(@Path('paymentID') String paymentId);
+
+  @GET(Endpoints.notificationsList)
+  Future<HttpResponse> getNotifications(
+      @Query('limit') int limit,
+  );
+
+  @PUT(Endpoints.notificationMarkRead)
+  Future<HttpResponse> markNotificationRead(@Path('id') String id);
+
+  @PUT(Endpoints.notificationMarkAllRead)
+  Future<HttpResponse> markAllNotificationsRead();
 }

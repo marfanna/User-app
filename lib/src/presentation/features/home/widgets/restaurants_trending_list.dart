@@ -16,7 +16,7 @@ class RestaurantsTrendingList extends ConsumerWidget {
 
     return async.when(
       loading: () => _buildSkeleton(),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
       data: (shops) {
         if (shops.isEmpty) return const SizedBox.shrink();
         final trending = shops.take(6).toList();
@@ -40,7 +40,7 @@ class RestaurantsTrendingList extends ConsumerWidget {
                 scrollDirection: Axis.horizontal,
                 clipBehavior: Clip.none,
                 itemCount: trending.length,
-                separatorBuilder: (_, __) => const Gap(16),
+                separatorBuilder: (_, _) => const Gap(16),
                 itemBuilder: (_, i) => _TrendingCard(
                   shop: trending[i],
                   onTap: () =>
@@ -73,8 +73,8 @@ class RestaurantsTrendingList extends ConsumerWidget {
             scrollDirection: Axis.horizontal,
             clipBehavior: Clip.none,
             itemCount: 3,
-            separatorBuilder: (_, __) => const Gap(16),
-            itemBuilder: (_, __) => _SkeletonTrendingCard(),
+            separatorBuilder: (_, _) => const Gap(16),
+            itemBuilder: (_, _) => _SkeletonTrendingCard(),
           ),
         ),
       ],
@@ -180,13 +180,19 @@ class _TrendingCard extends StatelessWidget {
                           ),
                         ),
                       ),
-                      const Row(
+                      Row(
                         children: [
-                          Icon(Icons.star, color: Color(0xFFFF6700), size: 20),
-                          Gap(4),
+                          const Icon(
+                            Icons.star,
+                            color: Color(0xFFFF6700),
+                            size: 20,
+                          ),
+                          const Gap(4),
                           Text(
-                            '4.5',
-                            style: TextStyle(
+                            shop.rating != null && shop.rating! > 0
+                                ? shop.rating!.toStringAsFixed(1)
+                                : '0.0',
+                            style: const TextStyle(
                               fontFamily: 'Nunito',
                               fontWeight: FontWeight.w600,
                               fontSize: 16,
@@ -324,7 +330,7 @@ class _ShopImageState extends State<_ShopImage> {
               width: widget.width,
               height: widget.height,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) {
+              errorBuilder: (_, _, _) {
                 if (!_bannerFailed &&
                     widget.logo != null &&
                     widget.logo!.isNotEmpty) {

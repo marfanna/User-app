@@ -96,11 +96,23 @@ class LeaderboardTabScreen extends ConsumerWidget {
   }
 }
 
-class _LeaderboardHeader extends StatelessWidget {
+class _LeaderboardHeader extends ConsumerWidget {
   const _LeaderboardHeader();
 
+  void _showRankingRules(BuildContext context, String theme) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _RankingRulesSheet(activeTheme: theme),
+    );
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = ref.watch(
+      leaderboardProvider.select((v) => v.asData?.value.theme ?? 'order_volume'),
+    );
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
       child: Column(
@@ -171,28 +183,349 @@ class _LeaderboardHeader extends StatelessWidget {
                   color: Color(0xFF040707),
                 ),
               ),
-              Container(
-                width: 24,
-                height: 24,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: const Color(0xFF28303F),
-                    width: 1.5,
-                  ),
-                ),
-                alignment: Alignment.center,
-                child: const Text(
-                  'i',
-                  style: TextStyle(
-                    fontFamily: 'Manrope',
-                    fontWeight: FontWeight.w700,
-                    fontSize: 12,
-                    color: Color(0xFF28303F),
+              GestureDetector(
+                onTap: () => _showRankingRules(context, theme),
+                behavior: HitTestBehavior.opaque,
+                child: Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: Container(
+                    width: 28,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: const Color(0xFF28303F),
+                        width: 1.5,
+                      ),
+                    ),
+                    alignment: Alignment.center,
+                    child: const Text(
+                      'i',
+                      style: TextStyle(
+                        fontFamily: 'Manrope',
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13,
+                        color: Color(0xFF28303F),
+                      ),
+                    ),
                   ),
                 ),
               ),
+
             ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Ranking Rules Bottom Sheet ─────────────────────────────────────────────
+
+class _RankingRulesSheet extends StatelessWidget {
+  const _RankingRulesSheet({required this.activeTheme});
+
+  final String activeTheme;
+
+  // Returns the single active scoring rule based on the admin-selected theme
+  Map<String, dynamic> get _activeRule {
+    switch (activeTheme) {
+      case 'weekend_warrior':
+        return {
+          'icon': Icons.weekend_rounded,
+          'color': const Color(0xFF9C27B0),
+          'title': 'Weekend Warrior',
+          'description':
+              'Earn 2× points on all orders placed on weekends (Saturday & Sunday). Order more on weekends to climb faster!',
+        };
+      case 'spend_master':
+        return {
+          'icon': Icons.trending_up_rounded,
+          'color': const Color(0xFF4CAF50),
+          'title': 'Spend Master',
+          'description':
+              'Earn bonus points when your order total exceeds 2,000 BDT. Spend more per order to score higher!',
+        };
+      default: // order_volume / standard
+        return {
+          'icon': Icons.monetization_on_rounded,
+          'color': const Color(0xFF0156A7),
+          'title': 'Standard',
+          'description':
+              'Earn 1 point for every 1 BDT you spend. The more you order, the higher you rank!',
+        };
+    }
+  }
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      padding: EdgeInsets.fromLTRB(24, 12, 24, 24 + MediaQuery.of(context).padding.bottom),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Handle bar
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE0E0E0),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const Gap(20),
+            // Title
+            Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFE6EFFC),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.emoji_events_rounded,
+                    color: Color(0xFF0156A7),
+                    size: 20,
+                  ),
+                ),
+                const Gap(12),
+                const Text(
+                  'How Ranking Works',
+                  style: TextStyle(
+                    fontFamily: 'Manrope',
+                    fontWeight: FontWeight.w700,
+                    fontSize: 18,
+                    color: Color(0xFF040707),
+                  ),
+                ),
+              ],
+            ),
+            const Gap(20),
+            const Divider(color: Color(0xFFF0F0F0)),
+            const Gap(16),
+
+            // ── Active Scoring Rule ────────────────────────────────
+            const Text(
+              'Active Scoring Rule',
+              style: TextStyle(
+                fontFamily: 'Manrope',
+                fontWeight: FontWeight.w700,
+                fontSize: 14,
+                color: Color(0xFF040707),
+              ),
+            ),
+            const Gap(10),
+            _RuleItem(
+              icon: _activeRule['icon'] as IconData,
+              iconColor: _activeRule['color'] as Color,
+              title: _activeRule['title'] as String,
+              description: _activeRule['description'] as String,
+            ),
+            const Gap(10),
+            const _RuleItem(
+              icon: Icons.calendar_month_rounded,
+              iconColor: Color(0xFFFF9800),
+              title: 'Monthly Reset',
+              description:
+                  'The leaderboard resets at the start of every month — a fresh start for all!',
+            ),
+
+
+            const Gap(20),
+            const Divider(color: Color(0xFFF0F0F0)),
+            const Gap(16),
+
+            // ── Prizes ────────────────────────────────────────────
+            const Text(
+              'This Month\'s Prizes',
+              style: TextStyle(
+                fontFamily: 'Manrope',
+                fontWeight: FontWeight.w700,
+                fontSize: 14,
+                color: Color(0xFF040707),
+              ),
+            ),
+            const Gap(10),
+            const _PrizeItem(
+              icon: Icons.emoji_events_rounded,
+              rank: '1st Place',
+              prize: '1 Month free home delivery',
+              rankColor: Color(0xFFFBBB00),
+            ),
+            const Gap(8),
+            const _PrizeItem(
+              icon: Icons.military_tech_rounded,
+              rank: '2nd Place',
+              prize: '15 days free home delivery',
+              rankColor: Color(0xFFD223FB),
+            ),
+            const Gap(8),
+            const _PrizeItem(
+              icon: Icons.military_tech_rounded,
+              rank: '3rd Place',
+              prize: '5 free home deliveries',
+              rankColor: Color(0xFF23A2FE),
+            ),
+
+            const Gap(20),
+            // CTA note
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: const Color(0xFFE6EFFC),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Text(
+                'Order more to earn more points and win prizes this month!',
+                style: TextStyle(
+                  fontFamily: 'Manrope',
+                  fontWeight: FontWeight.w500,
+                  fontSize: 13,
+                  height: 1.6,
+                  color: Color(0xFF0156A7),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RuleItem extends StatelessWidget {
+  const _RuleItem({
+    required this.icon,
+    required this.iconColor,
+    required this.title,
+    required this.description,
+  });
+
+  final IconData icon;
+  final Color iconColor;
+  final String title;
+  final String description;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            color: iconColor.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, color: iconColor, size: 18),
+        ),
+        const Gap(12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  fontFamily: 'Manrope',
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                  color: Color(0xFF040707),
+                ),
+              ),
+              const Gap(2),
+              Text(
+                description,
+                style: const TextStyle(
+                  fontFamily: 'Manrope',
+                  fontWeight: FontWeight.w400,
+                  fontSize: 12,
+                  height: 1.6,
+                  color: Color(0xFF60655C),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _PrizeItem extends StatelessWidget {
+  const _PrizeItem({
+    required this.icon,
+    required this.rank,
+    required this.prize,
+    required this.rankColor,
+  });
+
+  final IconData icon;
+  final String rank;
+  final String prize;
+  final Color rankColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: rankColor.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: rankColor.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: rankColor.withValues(alpha: 0.12),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              icon,
+              color: rankColor,
+              size: 22,
+            ),
+          ),
+          const Gap(12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  rank,
+                  style: TextStyle(
+                    fontFamily: 'Manrope',
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                    color: rankColor,
+                  ),
+                ),
+                const Gap(2),
+                Text(
+                  prize,
+                  style: const TextStyle(
+                    fontFamily: 'Manrope',
+                    fontWeight: FontWeight.w500,
+                    fontSize: 13,
+                    color: Color(0xFF363A33),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -326,18 +659,16 @@ class _PodiumAvatar extends StatelessWidget {
             color: Colors.white,
           ),
         ),
-        if (isFirst) ...[
-          const Gap(2),
-          Text(
-            '${entry.totalOrders} Orders',
-            style: const TextStyle(
-              fontFamily: 'Manrope',
-              fontWeight: FontWeight.w600,
-              fontSize: 14,
-              color: Colors.white,
-            ),
+        const Gap(2),
+        Text(
+          '${entry.score.round()} Points',
+          style: const TextStyle(
+            fontFamily: 'Manrope',
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
+            color: Colors.white,
           ),
-        ],
+        ),
       ],
     );
   }
@@ -477,7 +808,7 @@ class _LeaderboardListTile extends StatelessWidget {
                   ? Image.network(
                       entry.profileImage!,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => const Icon(
+                      errorBuilder: (_, _, _) => const Icon(
                         Icons.person,
                         color: Colors.white,
                         size: 20,
@@ -519,7 +850,7 @@ class _LeaderboardListTile extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               const Text(
-                'Total Orders',
+                'Points',
                 style: TextStyle(
                   fontFamily: 'Manrope',
                   fontWeight: FontWeight.w600,
@@ -529,7 +860,7 @@ class _LeaderboardListTile extends StatelessWidget {
               ),
               const Gap(2),
               Text(
-                '${entry.totalOrders}',
+                '${entry.score.round()}',
                 style: const TextStyle(
                   fontFamily: 'Manrope',
                   fontWeight: FontWeight.w600,

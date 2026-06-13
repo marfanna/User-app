@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
 import '../../../core/router/routes.dart';
 import '../../../core/widgets/gradient_background.dart';
@@ -13,16 +12,12 @@ import '../../../core/widgets/toast.dart';
 import '../riverpod/order_provider.dart';
 import '../riverpod/re_order_provider.dart';
 import '../../../core/models/order_details_ui_model.dart';
-
-String _maskOrderId(String id) {
-  if (id.length <= 4) return id;
-  return '...${id.substring(id.length - 4)}';
-}
+import '../../../../core/utiliity/order_id_util.dart';
 
 class OrderDetailsScreen extends ConsumerStatefulWidget {
-  final String orderId;
 
   const OrderDetailsScreen({super.key, required this.orderId});
+  final String orderId;
 
   @override
   ConsumerState<OrderDetailsScreen> createState() => _OrderDetailsScreenState();
@@ -89,7 +84,6 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
           ...order.items.asMap().entries.map((entry) {
             final index = entry.key + 1;
             final item = entry.value;
-            final isLast = index == order.items.length;
             return _buildOrderItem(
               index: index,
               name: item.name,
@@ -137,7 +131,7 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
                 ),
                 const Gap(4),
                 Text(
-                  'Order Id #${_maskOrderId(order.orderDisplayId)}',
+                  'Order Id #${maskOrderId(order.orderDisplayId)}',
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     fontWeight: FontWeight.w700,

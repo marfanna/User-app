@@ -1,4 +1,3 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../core/base/base.dart';
@@ -23,4 +22,6 @@ Future<AddressResponseEntity> addressBook(Ref ref) async {
 class SelectedAddressIndex extends _$SelectedAddressIndex {
   @override
   int? build() => null;
+
+  void set(int? index) => state = index;
 }

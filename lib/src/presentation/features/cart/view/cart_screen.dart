@@ -9,6 +9,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/di/dependency_injection.dart';
 import '../../../core/router/routes.dart';
 import '../../../core/widgets/app_bar/duare_app_bar.dart';
+import '../../../core/theme/src/theme_extensions/src/gradients.dart';
 import '../../../core/widgets/button/primary_gradient_button.dart';
 import '../../../core/widgets/card/duare_card.dart';
 import '../../address_book/riverpod/address_book_provider.dart';
@@ -155,7 +156,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
           _availabilityMessage = msg;
           _deliveryLoading = false;
         });
-        ref.read(checkoutDeliveryChargeProvider.notifier).state = charge;
+        ref.read(checkoutDeliveryChargeProvider.notifier).set(charge);
       }
     } catch (e) {
       if (mounted) {
@@ -185,8 +186,8 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     final subtotal = cartItems.fold<double>(0, (sum, c) => sum + c.totalPrice);
 
     // Recalculate when cart or selected address changes
-    ref.listen(cartProvider, (_, __) => _calculateDelivery());
-    ref.listen(selectedAddressIndexProvider, (_, __) => _calculateDelivery());
+    ref.listen(cartProvider, (_, _) => _calculateDelivery());
+    ref.listen(selectedAddressIndexProvider, (_, _) => _calculateDelivery());
     ref.listen(addressBookProvider, (_, next) {
       if (next.hasValue) _calculateDelivery();
     });
@@ -245,7 +246,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                             tip: _riderTip,
                             onTipChanged: (v) {
                               setState(() => _riderTip = v);
-                              ref.read(checkoutRiderTipProvider.notifier).state = v;
+                              ref.read(checkoutRiderTipProvider.notifier).set(v);
                             },
                           ),
                           const Gap(16),
@@ -257,7 +258,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                             deliveryError: _deliveryError,
                             onRetryDelivery: _calculateDelivery,
                             onDiscountChanged: (d) =>
-                                ref.read(checkoutDiscountProvider.notifier).state = d,
+                                ref.read(checkoutDiscountProvider.notifier).set(d),
                           ),
                           const Gap(32),
                         ],
@@ -267,11 +268,19 @@ class _CartScreenState extends ConsumerState<CartScreen> {
           ],
         ),
       ),
-      bottomNavigationBar: _buildBottomBar(context, cartItems.isEmpty),
+      bottomNavigationBar: _buildBottomBar(
+        context,
+        cartItems.isEmpty,
+        isCalculating: _deliveryLoading,
+      ),
     );
   }
 
-  Widget _buildBottomBar(BuildContext context, bool disabled) {
+  Widget _buildBottomBar(
+    BuildContext context,
+    bool disabled, {
+    bool isCalculating = false,
+  }) {
     return SafeArea(
       child: Container(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
@@ -281,27 +290,22 @@ class _CartScreenState extends ConsumerState<CartScreen> {
           height: 56,
           child: DecoratedBox(
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                begin: Alignment(-0.24, -0.24),
-                end: Alignment(0.99, 0.99),
-                colors: [Color(0xFF0156A7), Color(0xFF2E3293)],
-              ),
+              gradient: AppGradients.primaryLinear,
               borderRadius: BorderRadius.circular(4),
             ),
             child: Material(
               color: Colors.transparent,
               child: InkWell(
                 borderRadius: BorderRadius.circular(4),
-                onTap: disabled ? null : () {
+                onTap: (disabled || isCalculating) ? null : () {
                   if (!_isAvailable) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(_availabilityMessage ?? 'Delivery is not available right now')),
-                    );
-                    return;
-                  }
-                  if (_deliveryCharge == null) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Please select a valid delivery address')),
+                      SnackBar(
+                        content: Text(
+                          _availabilityMessage ??
+                              'Delivery is not available right now',
+                        ),
+                      ),
                     );
                     return;
                   }
@@ -309,21 +313,49 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                 },
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        disabled ? 'Cart is empty' : 'Checkout',
-                        style: const TextStyle(
-                          fontFamily: 'Manrope',
-                          fontWeight: FontWeight.w700,
-                          fontSize: 16,
-                          color: Colors.white,
-                        ),
+                  child: isCalculating
+                    ? const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          ),
+                          Gap(8),
+                          Text(
+                            'Calculating...',
+                            style: TextStyle(
+                              fontFamily: 'Manrope',
+                              fontWeight: FontWeight.w700,
+                              fontSize: 16,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      )
+                    : Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            disabled ? 'Cart is empty' : 'Checkout',
+                            style: const TextStyle(
+                              fontFamily: 'Manrope',
+                              fontWeight: FontWeight.w700,
+                              fontSize: 16,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const Icon(
+                            Icons.trending_flat,
+                            color: Colors.white,
+                            size: 24,
+                          ),
+                        ],
                       ),
-                      const Icon(Icons.trending_flat, color: Colors.white, size: 24),
-                    ],
-                  ),
                 ),
               ),
             ),
@@ -369,7 +401,6 @@ class _CartItemCardState extends ConsumerState<_CartItemCard>
 
   void _open() => _ctrl.animateTo(1.0);
   void _close() => _ctrl.animateTo(0.0);
-  void _toggle() => _ctrl.value > 0.5 ? _close() : _open();
 
   void _delete() {
     _close();
@@ -378,8 +409,6 @@ class _CartItemCardState extends ConsumerState<_CartItemCard>
 
   @override
   Widget build(BuildContext context) {
-    final cartItem = widget.cartItem;
-
     return GestureDetector(
       onHorizontalDragStart: (d) => _dragStart = d.localPosition.dx,
       onHorizontalDragUpdate: (d) {
@@ -399,7 +428,8 @@ class _CartItemCardState extends ConsumerState<_CartItemCard>
       onTap: () {
         if (_ctrl.value > 0) _close();
       },
-      child: AnimatedBuilder(
+      child: RepaintBoundary(
+        child: AnimatedBuilder(
         animation: _anim,
         builder: (context, child) {
           final offset = _anim.value * _deleteW;
@@ -464,16 +494,24 @@ class _CartItemCardState extends ConsumerState<_CartItemCard>
                       ? Image.network(
                           widget.cartItem.item.images.first,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) =>
-                              const Icon(Icons.fastfood, color: Colors.white54),
+                          cacheWidth: 148,
+                          cacheHeight: 148,
+                          errorBuilder: (_, _, _) => const Icon(
+                            Icons.fastfood,
+                            color: Colors.white54,
+                          ),
                         )
                       : widget.cartItem.item.image != null &&
                               widget.cartItem.item.image!.isNotEmpty
                           ? Image.network(
                               widget.cartItem.item.image!,
                               fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) =>
-                                  const Icon(Icons.fastfood, color: Colors.white54),
+                              cacheWidth: 148,
+                              cacheHeight: 148,
+                              errorBuilder: (_, _, _) => const Icon(
+                                Icons.fastfood,
+                                color: Colors.white54,
+                              ),
                             )
                           : const Icon(Icons.fastfood, color: Colors.white54),
                 ),
@@ -559,6 +597,7 @@ class _CartItemCardState extends ConsumerState<_CartItemCard>
             ],
           ),
         ),
+        ),
       ),
     );
   }
@@ -623,7 +662,7 @@ class _DeliveryAddressCard extends ConsumerWidget {
                 ),
               ),
             ),
-            error: (_, __) => GestureDetector(
+            error: (_, _) => GestureDetector(
               onTap: () => context.push(Routes.addressBook),
               child: const Row(
                 mainAxisAlignment: MainAxisAlignment.center,

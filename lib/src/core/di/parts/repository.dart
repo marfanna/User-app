@@ -24,11 +24,6 @@ OrderRepository orderRepository(Ref ref) {
 }
 
 @Riverpod(keepAlive: true)
-RiderRepository riderRepository(Ref ref) {
-  return RiderRepositoryImpl(remote: ref.read(restClientServiceProvider));
-}
-
-@Riverpod(keepAlive: true)
 AddressRepository addressRepository(Ref ref) {
   return AddressRepositoryImpl(remote: ref.read(restClientServiceProvider));
 }

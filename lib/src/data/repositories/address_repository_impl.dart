@@ -30,6 +30,7 @@ class AddressRepositoryImpl extends AddressRepository {
         return AddressEntity(
           id: a.id,
           type: a.type,
+          label: a.label,
           street: a.street ?? '',
           city: a.city ?? '',
           district: a.district ?? '',

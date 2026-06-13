@@ -39,17 +39,15 @@ class FeaturedItemCard extends StatelessWidget {
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(14),
                   ),
-                  child: Image.network(
-                    item.imageUrl,
-                    height: 155,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
-                      height: 155,
-                      color: const Color(0xFFF0F0F0),
-                      child: const Icon(Icons.restaurant, size: 40),
-                    ),
-                  ),
+                  child: item.imageUrl.isNotEmpty
+                      ? Image.network(
+                          item.imageUrl,
+                          height: 155,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, _, _) => _placeholder(),
+                        )
+                      : _placeholder(),
                 ),
                 if (item.rank != null)
                   Positioned(
@@ -171,4 +169,20 @@ class FeaturedItemCard extends StatelessWidget {
       ),
     );
   }
+
+  Widget _placeholder() => Container(
+    height: 155,
+    width: double.infinity,
+    color: const Color(0xFFF0F0F0),
+    child: const Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(
+          Icons.restaurant_menu_rounded,
+          size: 48,
+          color: Color(0xFFBDBDBD),
+        ),
+      ],
+    ),
+  );
 }

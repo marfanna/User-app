@@ -14,25 +14,25 @@ class ExploreScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     // Categories list matching the Figma grid design
     final categories = [
-      _CategoryItem(
+      const _CategoryItem(
         title: 'Restaurants',
         imagePath: 'assets/images/explore/restaurants.png',
         route: Routes.restaurants,
       ),
-      _CategoryItem(
+      const _CategoryItem(
         title: 'Cylinder',
         imagePath: 'assets/images/explore/cylinder.png',
       ),
-      _CategoryItem(
+      const _CategoryItem(
         title: 'Medicine',
         imagePath: 'assets/images/explore/medicine.png',
       ),
-      _CategoryItem(title: 'Mart', imagePath: 'assets/images/explore/mart.png'),
-      _CategoryItem(
+      const _CategoryItem(title: 'Mart', imagePath: 'assets/images/explore/mart.png'),
+      const _CategoryItem(
         title: 'Laundry',
         imagePath: 'assets/images/explore/laundry.png',
       ),
-      _CategoryItem(
+      const _CategoryItem(
         title: 'Laundry',
         imagePath: 'assets/images/explore/laundry.png',
         isComingSoon: true,
@@ -195,15 +195,15 @@ class _CategoryCard extends StatelessWidget {
       border: Border(
         top: BorderSide.none,
         left: BorderSide(
-          color: const Color(0xFF0156A7).withOpacity(0.2),
+          color: const Color(0xFF0156A7).withValues(alpha: 0.2),
           width: 1,
         ),
         right: BorderSide(
-          color: const Color(0xFF0156A7).withOpacity(0.2),
+          color: const Color(0xFF0156A7).withValues(alpha: 0.2),
           width: 2,
         ),
         bottom: BorderSide(
-          color: const Color(0xFF0156A7).withOpacity(0.2),
+          color: const Color(0xFF0156A7).withValues(alpha: 0.2),
           width: 2,
         ),
       ),
@@ -227,7 +227,7 @@ class _CategoryCard extends StatelessWidget {
             decoration: BoxDecoration(
               color: const Color(
                 0xFF0950A3,
-              ).withOpacity(0.5), // Color Scheme/Brand dark blue opacity
+              ).withValues(alpha: 0.5), // Color Scheme/Brand dark blue opacity
               borderRadius: BorderRadius.circular(4),
             ),
             child: Center(
@@ -237,7 +237,7 @@ class _CategoryCard extends StatelessWidget {
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(30),
                 ),
                 child: const Text(

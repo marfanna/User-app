@@ -112,8 +112,8 @@ class OrderModelMapper extends ClassMapperBase<OrderModel> {
     _$status,
     opt: true,
   );
-  static String? _$assignedRider(OrderModel v) => v.assignedRider;
-  static const Field<OrderModel, String> _f$assignedRider = Field(
+  static dynamic _$assignedRider(OrderModel v) => v.assignedRider;
+  static const Field<OrderModel, dynamic> _f$assignedRider = Field(
     'assignedRider',
     _$assignedRider,
     opt: true,
@@ -148,6 +148,30 @@ class OrderModelMapper extends ClassMapperBase<OrderModel> {
     _$updatedAt,
     opt: true,
   );
+  static String? _$confirmedAt(OrderModel v) => v.confirmedAt;
+  static const Field<OrderModel, String> _f$confirmedAt = Field(
+    'confirmedAt',
+    _$confirmedAt,
+    opt: true,
+  );
+  static String? _$preparingAt(OrderModel v) => v.preparingAt;
+  static const Field<OrderModel, String> _f$preparingAt = Field(
+    'preparingAt',
+    _$preparingAt,
+    opt: true,
+  );
+  static String? _$pickedUpAt(OrderModel v) => v.pickedUpAt;
+  static const Field<OrderModel, String> _f$pickedUpAt = Field(
+    'pickedUpAt',
+    _$pickedUpAt,
+    opt: true,
+  );
+  static String? _$deliveredAt(OrderModel v) => v.deliveredAt;
+  static const Field<OrderModel, String> _f$deliveredAt = Field(
+    'deliveredAt',
+    _$deliveredAt,
+    opt: true,
+  );
 
   @override
   final MappableFields<OrderModel> fields = const {
@@ -171,6 +195,10 @@ class OrderModelMapper extends ClassMapperBase<OrderModel> {
     #orderDate: _f$orderDate,
     #createdAt: _f$createdAt,
     #updatedAt: _f$updatedAt,
+    #confirmedAt: _f$confirmedAt,
+    #preparingAt: _f$preparingAt,
+    #pickedUpAt: _f$pickedUpAt,
+    #deliveredAt: _f$deliveredAt,
   };
 
   static OrderModel _instantiate(DecodingData data) {
@@ -195,6 +223,10 @@ class OrderModelMapper extends ClassMapperBase<OrderModel> {
       orderDate: data.dec(_f$orderDate),
       createdAt: data.dec(_f$createdAt),
       updatedAt: data.dec(_f$updatedAt),
+      confirmedAt: data.dec(_f$confirmedAt),
+      preparingAt: data.dec(_f$preparingAt),
+      pickedUpAt: data.dec(_f$pickedUpAt),
+      deliveredAt: data.dec(_f$deliveredAt),
     );
   }
 
@@ -283,12 +315,16 @@ abstract class OrderModelCopyWith<$R, $In extends OrderModel, $Out>
     String? paymentMethod,
     String? paymentStatus,
     String? status,
-    String? assignedRider,
+    dynamic assignedRider,
     double? tip,
     double? bonus,
     String? orderDate,
     String? createdAt,
     String? updatedAt,
+    String? confirmedAt,
+    String? preparingAt,
+    String? pickedUpAt,
+    String? deliveredAt,
   });
   OrderModelCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t);
 }
@@ -348,6 +384,10 @@ class _OrderModelCopyWithImpl<$R, $Out>
     Object? orderDate = $none,
     Object? createdAt = $none,
     Object? updatedAt = $none,
+    Object? confirmedAt = $none,
+    Object? preparingAt = $none,
+    Object? pickedUpAt = $none,
+    Object? deliveredAt = $none,
   }) => $apply(
     FieldCopyWithData({
       if (id != $none) #id: id,
@@ -370,6 +410,10 @@ class _OrderModelCopyWithImpl<$R, $Out>
       if (orderDate != $none) #orderDate: orderDate,
       if (createdAt != $none) #createdAt: createdAt,
       if (updatedAt != $none) #updatedAt: updatedAt,
+      if (confirmedAt != $none) #confirmedAt: confirmedAt,
+      if (preparingAt != $none) #preparingAt: preparingAt,
+      if (pickedUpAt != $none) #pickedUpAt: pickedUpAt,
+      if (deliveredAt != $none) #deliveredAt: deliveredAt,
     }),
   );
   @override
@@ -394,6 +438,10 @@ class _OrderModelCopyWithImpl<$R, $Out>
     orderDate: data.get(#orderDate, or: $value.orderDate),
     createdAt: data.get(#createdAt, or: $value.createdAt),
     updatedAt: data.get(#updatedAt, or: $value.updatedAt),
+    confirmedAt: data.get(#confirmedAt, or: $value.confirmedAt),
+    preparingAt: data.get(#preparingAt, or: $value.preparingAt),
+    pickedUpAt: data.get(#pickedUpAt, or: $value.pickedUpAt),
+    deliveredAt: data.get(#deliveredAt, or: $value.deliveredAt),
   );
 
   @override
@@ -777,6 +825,12 @@ class AddressModelMapper extends ClassMapperBase<AddressModel> {
     _$type,
     opt: true,
   );
+  static String? _$label(AddressModel v) => v.label;
+  static const Field<AddressModel, String> _f$label = Field(
+    'label',
+    _$label,
+    opt: true,
+  );
   static String? _$street(AddressModel v) => v.street;
   static const Field<AddressModel, String> _f$street = Field(
     'street',
@@ -824,6 +878,7 @@ class AddressModelMapper extends ClassMapperBase<AddressModel> {
   final MappableFields<AddressModel> fields = const {
     #id: _f$id,
     #type: _f$type,
+    #label: _f$label,
     #street: _f$street,
     #city: _f$city,
     #district: _f$district,
@@ -837,6 +892,7 @@ class AddressModelMapper extends ClassMapperBase<AddressModel> {
     return AddressModel(
       id: data.dec(_f$id),
       type: data.dec(_f$type),
+      label: data.dec(_f$label),
       street: data.dec(_f$street),
       city: data.dec(_f$city),
       district: data.dec(_f$district),
@@ -913,6 +969,7 @@ abstract class AddressModelCopyWith<$R, $In extends AddressModel, $Out>
   $R call({
     String? id,
     String? type,
+    String? label,
     String? street,
     String? city,
     String? district,
@@ -939,6 +996,7 @@ class _AddressModelCopyWithImpl<$R, $Out>
   $R call({
     Object? id = $none,
     Object? type = $none,
+    Object? label = $none,
     Object? street = $none,
     Object? city = $none,
     Object? district = $none,
@@ -950,6 +1008,7 @@ class _AddressModelCopyWithImpl<$R, $Out>
     FieldCopyWithData({
       if (id != $none) #id: id,
       if (type != $none) #type: type,
+      if (label != $none) #label: label,
       if (street != $none) #street: street,
       if (city != $none) #city: city,
       if (district != $none) #district: district,
@@ -963,6 +1022,7 @@ class _AddressModelCopyWithImpl<$R, $Out>
   AddressModel $make(CopyWithData data) => AddressModel(
     id: data.get(#id, or: $value.id),
     type: data.get(#type, or: $value.type),
+    label: data.get(#label, or: $value.label),
     street: data.get(#street, or: $value.street),
     city: data.get(#city, or: $value.city),
     district: data.get(#district, or: $value.district),

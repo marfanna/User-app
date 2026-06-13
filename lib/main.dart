@@ -11,11 +11,28 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 
 import 'firebase_options.dart';
 import 'src/core/services/fcm_service.dart';
+import 'src/core/services/order_tracking_notification_service.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  // print("Handling a background message: ${message.messageId}");
+  await OrderTrackingNotificationService.initialize();
+
+  final data = message.data;
+  final type = data['type'] as String?;
+  if (type == 'order_updated' || type == 'order_assigned') {
+    final orderId = data['order_id'] as String?;
+    final orderNumber = data['orderNumber'] as String? ?? orderId ?? '';
+    final status = data['status'] as String? ??
+        (type == 'order_assigned' ? 'assigned' : '');
+    if (orderId != null && status.isNotEmpty) {
+      await OrderTrackingNotificationService.showOrUpdate(
+        orderId: orderId,
+        orderNumber: orderNumber,
+        status: status,
+      );
+    }
+  }
 }
 
 void main() async {

@@ -5,23 +5,22 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:intl/intl.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import 'package:dio/dio.dart';
+import '../../../../core/di/dependency_injection.dart';
 import '../../../../domain/entities/order_entity.dart';
 import '../../../core/widgets/app_bar/duare_app_bar.dart';
 import '../../../core/widgets/card/duare_card.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/gradient_background.dart';
 import '../riverpod/track_order_provider.dart';
-
-String _maskOrderId(String id) {
-  if (id.length <= 4) return id;
-  return '...${id.substring(id.length - 4)}';
-}
+import '../../../../core/utiliity/order_id_util.dart';
 
 class TrackOrderScreen extends ConsumerStatefulWidget {
-  final String orderId;
 
   const TrackOrderScreen({super.key, required this.orderId});
+  final String orderId;
 
   @override
   ConsumerState<TrackOrderScreen> createState() => _TrackOrderScreenState();
@@ -33,6 +32,7 @@ class _TrackOrderScreenState extends ConsumerState<TrackOrderScreen> {
   Timer? _timer;
   OrderEntity? _currentOrder;
   StreamSubscription<RemoteMessage>? _fcmSubscription;
+  bool _cancelling = false;
 
   @override
   void initState() {
@@ -92,6 +92,25 @@ class _TrackOrderScreenState extends ConsumerState<TrackOrderScreen> {
         s != 'cancelled' &&
         s != 'rejected' &&
         s != 'refunded';
+  }
+
+  String _getAddressLabel(AddressEntity? address) {
+    if (address == null) return '';
+    
+    // First try custom label (e.g., "Home", "Office" typed by user)
+    final label = address.label?.trim() ?? '';
+    if (label.isNotEmpty) {
+      return '${label[0].toUpperCase()}${label.substring(1)}';
+    }
+
+    // Fallback to type if it's not "other"
+    final type = address.type?.trim() ?? '';
+    if (type.isNotEmpty && type.toLowerCase() != 'other') {
+      return '${type[0].toUpperCase()}${type.substring(1)}';
+    }
+    
+    // Final fallback is the street address
+    return address.street;
   }
 
   @override
@@ -225,7 +244,7 @@ class _TrackOrderScreenState extends ConsumerState<TrackOrderScreen> {
               ),
               const Gap(6),
               Text(
-                'Order Id #${_maskOrderId(order.orderId)}',
+                'Order Id #${maskOrderId(order.orderId)}',
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   fontWeight: FontWeight.w700,
@@ -243,6 +262,8 @@ class _TrackOrderScreenState extends ConsumerState<TrackOrderScreen> {
                   color: Color(0xFF040707),
                 ),
               ),
+              const Gap(6),
+              _PaymentBadge(method: order.paymentMethod),
             ],
           ),
         ),
@@ -315,9 +336,9 @@ class _TrackOrderScreenState extends ConsumerState<TrackOrderScreen> {
         currentStep = 0;
       case 'confirmed':
       case 'preparing':
+      case 'assigned':
       case 'ready_for_pickup':
         currentStep = 1;
-      case 'assigned':
       case 'picked_up':
       case 'on_way':
         currentStep = 2;
@@ -350,21 +371,29 @@ class _TrackOrderScreenState extends ConsumerState<TrackOrderScreen> {
         t != null ? DateFormat('hh:mm a').format(t.toLocal()) : null;
 
     final steps = [
-      (label: 'Order Pending', time: fmt(order.createdAt), active: true),
+      (
+        label: 'Order Placed',
+        time: fmt(order.createdAt),
+        active: true,
+        isCurrent: currentStep == 0,
+      ),
       (
         label: 'Processing',
-        time: currentStep >= 1 ? fmt(order.updatedAt) : null,
+        time: currentStep >= 1 ? fmt(order.preparingAt ?? order.confirmedAt ?? order.updatedAt) : null,
         active: currentStep >= 1,
+        isCurrent: currentStep == 1,
       ),
       (
         label: 'On The Way',
-        time: currentStep >= 2 ? fmt(order.updatedAt) : null,
+        time: currentStep >= 2 ? fmt(order.pickedUpAt) : null,
         active: currentStep >= 2,
+        isCurrent: currentStep == 2,
       ),
       (
         label: 'Delivered',
-        time: currentStep >= 3 ? fmt(order.updatedAt) : null,
+        time: currentStep >= 3 ? fmt(order.deliveredAt) : null,
         active: currentStep >= 3,
+        isCurrent: currentStep == 3,
       ),
     ];
 
@@ -413,11 +442,13 @@ class _TrackOrderScreenState extends ConsumerState<TrackOrderScreen> {
                   children: [
                     Text(
                       step.label,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontFamily: 'Poppins',
                         fontWeight: FontWeight.w500,
                         fontSize: 16,
-                        color: Color(0xFF040707),
+                        color: step.isCurrent
+                            ? const Color(0xFF040707)
+                            : const Color(0xFF737780),
                       ),
                     ),
                     if (step.time != null) ...[
@@ -483,7 +514,7 @@ class _TrackOrderScreenState extends ConsumerState<TrackOrderScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      order.assignedRider ?? 'Rider',
+                      order.assignedRider?.name ?? 'Rider',
                       style: const TextStyle(
                         fontFamily: 'Poppins',
                         fontWeight: FontWeight.w600,
@@ -492,9 +523,9 @@ class _TrackOrderScreenState extends ConsumerState<TrackOrderScreen> {
                         color: Color(0xFF363A33),
                       ),
                     ),
-                    if (order.customer?.phone.isNotEmpty == true)
+                    if (order.assignedRider?.phone.isNotEmpty == true)
                       Text(
-                        order.customer!.phone,
+                        order.assignedRider!.phone,
                         style: const TextStyle(
                           fontFamily: 'Poppins',
                           fontWeight: FontWeight.w400,
@@ -506,20 +537,47 @@ class _TrackOrderScreenState extends ConsumerState<TrackOrderScreen> {
                   ],
                 ),
               ),
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: const Color(0xFFE8EBE6)),
+              if (order.assignedRider?.phone.isNotEmpty == true)
+                GestureDetector(
+                  onTap: () async {
+                    final phone = order.assignedRider!.phone;
+                    final url = Uri.parse('tel:$phone');
+                    try {
+                      await launchUrl(url);
+                    } catch (e) {
+                      // dialer unavailable on this device — silently ignore
+                    }
+                  },
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xFFE8EBE6)),
+                    ),
+                    child: const Icon(
+                      Icons.call_outlined,
+                      size: 20,
+                      color: Color(0xFF60635E),
+                    ),
+                  ),
+                )
+              else
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: const Color(0xFFE8EBE6)),
+                  ),
+                  child: const Icon(
+                    Icons.call_outlined,
+                    size: 20,
+                    color: Color(0xFF60635E),
+                  ),
                 ),
-                child: const Icon(
-                  Icons.call_outlined,
-                  size: 20,
-                  color: Color(0xFF60635E),
-                ),
-              ),
             ],
           ),
           const Gap(10),
@@ -545,9 +603,7 @@ class _TrackOrderScreenState extends ConsumerState<TrackOrderScreen> {
               const Spacer(),
               Flexible(
                 child: Text(
-                  order.deliveryAddress?.type?.isNotEmpty == true
-                      ? order.deliveryAddress!.type!
-                      : order.deliveryAddress?.street ?? 'Home',
+                  _getAddressLabel(order.deliveryAddress),
                   textAlign: TextAlign.right,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -727,38 +783,51 @@ class _TrackOrderScreenState extends ConsumerState<TrackOrderScreen> {
 
   Widget _buildCancelButton() {
     return GestureDetector(
-      onTap: _confirmCancel,
+      onTap: _cancelling ? null : _confirmCancel,
       child: Container(
         height: 48,
         decoration: BoxDecoration(
-          color: const Color(0xFFF6220E),
+          color: _cancelling
+              ? const Color(0xFFB0BEC5)
+              : const Color(0xFFF6220E),
           borderRadius: BorderRadius.circular(4),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 26),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text(
-              'Cancel Order',
-              style: TextStyle(
-                fontFamily: 'Manrope',
-                fontWeight: FontWeight.w700,
-                fontSize: 16,
-                letterSpacing: -0.5,
-                color: Colors.white,
+        child: _cancelling
+            ? const Center(
+                child: SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.5,
+                    color: Colors.white,
+                  ),
+                ),
+              )
+            : Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Cancel Order',
+                    style: TextStyle(
+                      fontFamily: 'Manrope',
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                      letterSpacing: -0.5,
+                      color: Colors.white,
+                    ),
+                  ),
+                  Text(
+                    _countdown,
+                    style: const TextStyle(
+                      fontFamily: 'Manrope',
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
               ),
-            ),
-            Text(
-              _countdown,
-              style: const TextStyle(
-                fontFamily: 'Manrope',
-                fontWeight: FontWeight.w700,
-                fontSize: 16,
-                color: Colors.white,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -784,6 +853,38 @@ class _TrackOrderScreenState extends ConsumerState<TrackOrderScreen> {
     );
   }
 
+  Future<void> _cancelOrder() async {
+    setState(() => _cancelling = true);
+    try {
+      final dio = ref.read(dioProvider);
+      await dio.patch(
+        'orders/${widget.orderId}/cancel',
+        data: {'status': 'cancelled', 'reason': 'Cancelled by customer'},
+      );
+      ref.invalidate(trackOrderProvider(widget.orderId));
+      if (mounted) Navigator.of(context).pop();
+    } on DioException catch (e) {
+      if (mounted) {
+        final msg = e.response?.data?['message'] as String?;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(msg ?? 'Failed to cancel order. Try again.'),
+          ),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to cancel order. Try again.'),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _cancelling = false);
+    }
+  }
+
   void _confirmCancel() {
     showDialog<void>(
       context: context,
@@ -798,7 +899,7 @@ class _TrackOrderScreenState extends ConsumerState<TrackOrderScreen> {
           TextButton(
             onPressed: () {
               Navigator.pop(context);
-              Navigator.pop(context);
+              _cancelOrder();
             },
             child: const Text(
               'Yes, Cancel',
@@ -806,6 +907,38 @@ class _TrackOrderScreenState extends ConsumerState<TrackOrderScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _PaymentBadge extends StatelessWidget {
+  const _PaymentBadge({required this.method});
+
+  final String method;
+
+  @override
+  Widget build(BuildContext context) {
+    final (label, color) = switch (method) {
+      'bkash' => ('bKash', const Color(0xFFE2136E)),
+      'cash_on_delivery' => ('Cash on Delivery', const Color(0xFF60635E)),
+      _ => ('Online Payment', const Color(0xFF0156A7)),
+    };
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontFamily: 'Manrope',
+          fontWeight: FontWeight.w600,
+          fontSize: 11,
+          color: color,
+        ),
       ),
     );
   }

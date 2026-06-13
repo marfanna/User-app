@@ -27,6 +27,8 @@ Dio dio(Ref ref) {
 
   dio.options
     ..baseUrl = Endpoints.base
+    ..connectTimeout = const Duration(seconds: 10)
+    ..receiveTimeout = const Duration(seconds: 15)
     ..headers['Content-Type'] = 'application/json';
 
   return dio;

@@ -3,6 +3,17 @@ import '../models/order/order_model.dart';
 
 extension OrderModelToEntity on OrderModel {
   OrderEntity toEntity() {
+    RiderEntity? riderEntity;
+    if (assignedRider is Map<String, dynamic>) {
+      final map = assignedRider as Map<String, dynamic>;
+      riderEntity = RiderEntity(
+        id: map['_id']?.toString() ?? map['id']?.toString() ?? '',
+        name: map['name']?.toString() ?? '',
+        phone: map['phone']?.toString() ?? '',
+        profileImage: map['profileImage']?.toString(),
+      );
+    }
+
     return OrderEntity(
       id: id ?? '',
       orderId: orderId ?? '',
@@ -18,12 +29,16 @@ extension OrderModelToEntity on OrderModel {
       paymentMethod: paymentMethod ?? '',
       paymentStatus: paymentStatus ?? '',
       status: status ?? '',
-      assignedRider: assignedRider,
+      assignedRider: riderEntity,
       tip: tip ?? 0.0,
       bonus: bonus ?? 0.0,
       orderDate: DateTime.tryParse(orderDate ?? ''),
       createdAt: DateTime.tryParse(createdAt ?? ''),
       updatedAt: DateTime.tryParse(updatedAt ?? ''),
+      confirmedAt: DateTime.tryParse(confirmedAt ?? ''),
+      preparingAt: DateTime.tryParse(preparingAt ?? ''),
+      pickedUpAt: DateTime.tryParse(pickedUpAt ?? ''),
+      deliveredAt: DateTime.tryParse(deliveredAt ?? ''),
     );
   }
 }
@@ -109,6 +124,7 @@ extension AddressModelToEntity on AddressModel {
     return AddressEntity(
       id: id,
       type: type,
+      label: label,
       street: street ?? '',
       city: city ?? '',
       district: district ?? '',

@@ -25,6 +25,10 @@ class OrderModel with OrderModelMappable {
     this.orderDate,
     this.createdAt,
     this.updatedAt,
+    this.confirmedAt,
+    this.preparingAt,
+    this.pickedUpAt,
+    this.deliveredAt,
   });
 
   @MappableField(key: '_id')
@@ -42,12 +46,16 @@ class OrderModel with OrderModelMappable {
   final String? paymentMethod;
   final String? paymentStatus;
   final String? status;
-  final String? assignedRider;
+  final dynamic assignedRider;
   final double? tip;
   final double? bonus;
   final String? orderDate;
   final String? createdAt;
   final String? updatedAt;
+  final String? confirmedAt;
+  final String? preparingAt;
+  final String? pickedUpAt;
+  final String? deliveredAt;
 
   static final fromJson = OrderModelMapper.fromJson;
 }
@@ -158,6 +166,7 @@ class AddressModel with AddressModelMappable {
   const AddressModel({
     this.id,
     this.type,
+    this.label,
     this.street,
     this.city,
     this.district,
@@ -170,6 +179,7 @@ class AddressModel with AddressModelMappable {
   @MappableField(key: '_id')
   final String? id;
   final String? type;
+  final String? label;
   final String? street;
   final String? city;
   final String? district;

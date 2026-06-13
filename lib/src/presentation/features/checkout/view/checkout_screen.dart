@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -5,7 +7,9 @@ import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/base/base.dart';
+import '../../../core/theme/src/theme_extensions/src/gradients.dart';
 import '../../../../core/di/dependency_injection.dart';
+import '../../../../data/services/analytics/analytics_service.dart';
 import '../../../../data/services/network/endpoints.dart';
 import '../../../core/router/routes.dart';
 import '../../../core/widgets/rounded_back_button.dart';
@@ -26,6 +30,27 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   _PaymentMethod _selectedPayment = _PaymentMethod.cash;
   final _instructionCtrl = TextEditingController();
   bool _placing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final items = ref.read(cartProvider);
+      if (items.isEmpty) return;
+      AnalyticsService.instance.logBeginCheckout(
+        value: ref.read(cartProvider.notifier).subtotal,
+        items: items
+            .map((c) => AnalyticsService.instance.item(
+                  itemId: c.item.id,
+                  itemName: c.item.name,
+                  price: c.selectedVariant?.price ?? c.item.price,
+                  quantity: c.quantity,
+                  category: c.shopName,
+                ))
+            .toList(),
+      );
+    });
+  }
 
   @override
   void dispose() {
@@ -138,7 +163,11 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         children: [
           const Row(
             children: [
-              Icon(Icons.credit_card_outlined, size: 24, color: Color(0xFF60635E)),
+              Icon(
+                Icons.credit_card_outlined,
+                size: 24,
+                color: Color(0xFF60635E),
+              ),
               Gap(12),
               Text(
                 'Payment method',
@@ -217,7 +246,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: selected ? const Color(0xFF0156A7) : const Color(0xFFDADADA),
+                  color: selected
+                      ? const Color(0xFF0156A7)
+                      : const Color(0xFFDADADA),
                   width: 1.5,
                 ),
               ),
@@ -323,11 +354,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             topLeft: Radius.circular(20),
             topRight: Radius.circular(20),
           ),
-          gradient: LinearGradient(
-            begin: Alignment(-0.24, -0.24),
-            end: Alignment(0.99, 0.99),
-            colors: [Color(0xFF0156A7), Color(0xFF2E3293)],
-          ),
+          gradient: AppGradients.primaryLinear,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -394,29 +421,29 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   }
 
   Widget _summaryLabel(String text) => Text(
-        text,
-        style: const TextStyle(
-          fontFamily: 'Manrope',
-          fontWeight: FontWeight.w500,
-          fontSize: 14.56,
-          height: 1.37,
-          letterSpacing: 0.52,
-          color: Color(0xFFFEFEFF),
-        ),
-      );
+    text,
+    style: const TextStyle(
+      fontFamily: 'Manrope',
+      fontWeight: FontWeight.w500,
+      fontSize: 14.56,
+      height: 1.37,
+      letterSpacing: 0.52,
+      color: Color(0xFFFEFEFF),
+    ),
+  );
 
   Widget _summaryValue(String text) => Text(
-        text,
-        textAlign: TextAlign.right,
-        style: const TextStyle(
-          fontFamily: 'Manrope',
-          fontWeight: FontWeight.w500,
-          fontSize: 14.56,
-          height: 1.37,
-          letterSpacing: 0.52,
-          color: Color(0xFFFEFEFF),
-        ),
-      );
+    text,
+    textAlign: TextAlign.right,
+    style: const TextStyle(
+      fontFamily: 'Manrope',
+      fontWeight: FontWeight.w500,
+      fontSize: 14.56,
+      height: 1.37,
+      letterSpacing: 0.52,
+      color: Color(0xFFFEFEFF),
+    ),
+  );
 
   Widget _buildPlaceOrderButton(double total) {
     return SizedBox(
@@ -468,23 +495,26 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       final dio = ref.read(dioProvider);
       final shopId = cartItems.first.shopId;
       final items = cartItems
-          .map((c) => {
-                'itemId': c.item.id,
-                'itemType': 'menu_item',
-                'quantity': c.quantity,
-                if (c.selectedVariant != null)
-                  'variant': {
-                    '_id': c.selectedVariant!.id,
-                    'name': c.selectedVariant!.name,
-                  },
-              })
+          .map(
+            (c) => {
+              'itemId': c.item.id,
+              'itemType': 'menu_item',
+              'quantity': c.quantity,
+              if (c.selectedVariant != null)
+                'variant': {
+                  '_id': c.selectedVariant!.id,
+                  'name': c.selectedVariant!.name,
+                },
+            },
+          )
           .toList();
 
       final addressData = ref.read(addressBookProvider).value;
       Map<String, dynamic> deliveryAddress;
       if (addressData != null && addressData.addresses.isNotEmpty) {
         final selectedIndex =
-            ref.read(selectedAddressIndexProvider) ?? addressData.defaultAddressIndex;
+            ref.read(selectedAddressIndexProvider) ??
+            addressData.defaultAddressIndex;
         final effectiveIndex = selectedIndex < addressData.addresses.length
             ? selectedIndex
             : addressData.defaultAddressIndex;
@@ -497,7 +527,10 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
           if (addr.coordinates != null)
             'coordinates': {
               'type': 'Point',
-              'coordinates': [addr.coordinates!.longitude, addr.coordinates!.latitude],
+              'coordinates': [
+                addr.coordinates!.longitude,
+                addr.coordinates!.latitude,
+              ],
             },
         };
       } else {
@@ -513,20 +546,40 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         };
       }
 
-      final response = await dio.post('${Endpoints.base}orders/create', data: {
-        'shopId': shopId,
-        'items': items,
-        'paymentMethod':
-            _selectedPayment == _PaymentMethod.bkash ? 'bkash' : 'cash_on_delivery',
-        if (_instructionCtrl.text.trim().isNotEmpty)
-          'specialInstructions': _instructionCtrl.text.trim(),
-        'deliveryAddress': deliveryAddress,
-      });
+      final response = await dio.post(
+        '${Endpoints.base}orders/create',
+        data: {
+          'shopId': shopId,
+          'items': items,
+          'paymentMethod': _selectedPayment == _PaymentMethod.bkash
+              ? 'bkash'
+              : 'cash_on_delivery',
+          'orderChannel': Platform.isIOS ? 'ios' : 'android',
+          if (_instructionCtrl.text.trim().isNotEmpty)
+            'specialInstructions': _instructionCtrl.text.trim(),
+          'deliveryAddress': deliveryAddress,
+        },
+      );
 
+      final purchasedItems = ref.read(cartProvider);
       ref.read(cartProvider.notifier).clearCart();
 
       final orderData = response.data['data'];
       final orderId = orderData['_id'];
+
+      AnalyticsService.instance.logPurchase(
+        transactionId: orderId.toString(),
+        value: totalAmount,
+        items: purchasedItems
+            .map((c) => AnalyticsService.instance.item(
+                  itemId: c.item.id,
+                  itemName: c.item.name,
+                  price: c.selectedVariant?.price ?? c.item.price,
+                  quantity: c.quantity,
+                  category: c.shopName,
+                ))
+            .toList(),
+      );
 
       if (_selectedPayment == _PaymentMethod.bkash) {
         final bkashRepo = ref.read(bkashRepositoryProvider);
@@ -538,24 +591,30 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         if (mounted) {
           bkashResult.when(
             success: (data) {
-              if (data?.checkoutURL != null) {
+              if (data?.checkoutUrl != null) {
                 context.pushReplacementNamed(
                   Routes.bkashPayment,
                   extra: {
-                    'checkoutUrl': data!.checkoutURL!,
+                    'checkoutUrl': data!.checkoutUrl!,
                     'paymentId': data.paymentID!,
                     'orderId': orderId,
                   },
                 );
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Failed to get bKash checkout URL')),
+                  const SnackBar(
+                    content: Text('Failed to get bKash checkout URL'),
+                  ),
                 );
               }
             },
             error: (failure) {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Failed to initiate bKash payment: ${failure.message}')),
+                SnackBar(
+                  content: Text(
+                    'Failed to initiate bKash payment: ${failure.message}',
+                  ),
+                ),
               );
             },
           );
@@ -570,9 +629,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to place order: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to place order: $e')));
       }
     } finally {
       if (mounted) setState(() => _placing = false);

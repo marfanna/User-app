@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 
+import '../../orders/models/customer_order_model.dart';
+import '../../orders/riverpod/order_review_provider.dart';
+import '../../orders/view/order_review_dialog.dart';
 import '../widgets/restaurants_home_header.dart';
 import '../widgets/restaurants_search_bar.dart';
-import '../widgets/restaurants_category_list.dart';
 import '../widgets/restaurants_promotional_banner.dart';
 import '../widgets/restaurants_trending_list.dart';
 import '../widgets/restaurants_best_deals.dart';
+import '../widgets/restaurants_category_list.dart';
 import '../widgets/restaurants_all_list.dart';
 import '../widgets/restaurants_sponsored_card.dart';
 
@@ -20,8 +23,44 @@ class RestaurantsHomeScreen extends ConsumerStatefulWidget {
 }
 
 class _RestaurantsHomeScreenState extends ConsumerState<RestaurantsHomeScreen> {
+  bool _reviewDialogShown = false;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(
+      () => ref.read(orderReviewProvider.notifier).initialize(),
+    );
+  }
+
+  void _showReviewDialog(CustomerOrderModel order) {
+    if (_reviewDialogShown) return;
+    _reviewDialogShown = true;
+    showModalBottomSheet<void>(
+      context: context,
+      useRootNavigator: true,
+      isScrollControlled: true,
+      isDismissible: false,
+      enableDrag: false,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(ctx).viewInsets.bottom,
+        ),
+        child: OrderReviewDialog(order: order),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    ref.listen<CustomerOrderModel?>(orderReviewProvider, (_, next) {
+      if (next != null) {
+        WidgetsBinding.instance.addPostFrameCallback(
+          (_) { if (mounted) _showReviewDialog(next); },
+        );
+      }
+    });
     return Scaffold(
       // Gradient background matching Figma
       body: Container(
@@ -36,30 +75,30 @@ class _RestaurantsHomeScreenState extends ConsumerState<RestaurantsHomeScreen> {
             ],
           ),
         ),
-        child: SafeArea(
+        child: const SafeArea(
           bottom: false,
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: EdgeInsets.symmetric(horizontal: 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Gap(16),
-                const RestaurantsHomeHeader(),
-                const Gap(24),
-                const RestaurantsSearchBar(),
-                const Gap(24),
-                const RestaurantsCategoryList(),
-                const Gap(24),
-                const RestaurantsPromotionalBanner(),
-                const Gap(24),
-                const RestaurantsBestDeals(),
-                const Gap(24),
-                const RestaurantsTrendingList(),
-                const Gap(24),
-                const RestaurantsSponsoredCard(),
-                const Gap(24),
-                const RestaurantsAllList(),
-                const Gap(100), // Space for bottom navigation bar
+                Gap(16),
+                RestaurantsHomeHeader(),
+                Gap(24),
+                RestaurantsSearchBar(),
+                Gap(24),
+                RestaurantsCategoryList(),
+                Gap(24),
+                RestaurantsPromotionalBanner(),
+                Gap(24),
+                RestaurantsBestDeals(),
+                Gap(24),
+                RestaurantsTrendingList(),
+                Gap(24),
+                RestaurantsSponsoredCard(),
+                Gap(24),
+                RestaurantsAllList(),
+                Gap(100), // Space for bottom navigation bar
               ],
             ),
           ),

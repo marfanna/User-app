@@ -88,7 +88,7 @@ class MenuListItem extends StatelessWidget {
                   width: 110,
                   height: 110,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(
+                  errorBuilder: (_, _, _) => Container(
                     width: 110,
                     height: 110,
                     color: const Color(0xFFF0F0F0),

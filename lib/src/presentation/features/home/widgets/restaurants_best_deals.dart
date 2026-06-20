@@ -25,7 +25,7 @@ class RestaurantsBestDeals extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Best Deals',
+              'Spotlight',
               style: TextStyle(
                 fontFamily: 'Manrope',
                 fontWeight: FontWeight.w700,

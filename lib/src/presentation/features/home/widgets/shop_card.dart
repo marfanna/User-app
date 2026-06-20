@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 
+import '../../../../core/providers/user_position_provider.dart';
+import '../../../../core/utiliity/geolocator_util.dart';
 import '../models/shop_data.dart';
 
-/// Reusable shop card: banner image on top, name + rating + area below.
+/// Reusable shop card: banner image on top, name + meta info below.
 /// Used by [RestaurantsAllList], [FavouritesScreen], etc.
-class ShopCard extends StatelessWidget {
+class ShopCard extends ConsumerWidget {
   const ShopCard({super.key, required this.shop, required this.onTap});
 
   final ShopData shop;
@@ -16,7 +19,25 @@ class ShopCard extends StatelessWidget {
   static const double _imageRadius = 8;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final positionAsync = ref.watch(userPositionProvider);
+    final userPos = positionAsync.asData?.value;
+
+    String? distanceText;
+    if (userPos != null && shop.latitude != null && shop.longitude != null) {
+      final km = GeolocatorUtil.calculateDistance(
+        userPos.latitude,
+        userPos.longitude,
+        shop.latitude!,
+        shop.longitude!,
+      );
+      distanceText = km < 1
+          ? '${(km * 1000).round()}m'
+          : '${km.toStringAsFixed(1)}km';
+    }
+
+    final prepTime = shop.estimatedPrepTime ?? 30;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -39,6 +60,7 @@ class ShopCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Name + rating row
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.end,
@@ -62,48 +84,76 @@ class ShopCard extends StatelessWidget {
                           const Icon(
                             Icons.star,
                             color: Color(0xFFFF6700),
-                            size: 20,
+                            size: 18,
                           ),
-                          const Gap(4),
+                          const Gap(3),
                           Text(
                             shop.rating != null && shop.rating! > 0
                                 ? shop.rating!.toStringAsFixed(1)
-                                : '0.0',
+                                : 'New',
                             style: const TextStyle(
                               fontFamily: 'Nunito',
                               fontWeight: FontWeight.w600,
-                              fontSize: 16,
-                              height: 1.2,
+                              fontSize: 14,
                               color: Color(0xFF040707),
                             ),
                           ),
+                          if (shop.totalReviews != null &&
+                              shop.totalReviews! > 0) ...[
+                            const Gap(2),
+                            Text(
+                              '(${shop.totalReviews! > 999 ? '999+' : shop.totalReviews})',
+                              style: const TextStyle(
+                                fontFamily: 'Manrope',
+                                fontWeight: FontWeight.w400,
+                                fontSize: 12,
+                                color: Color(0xFF646464),
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                     ],
                   ),
-                  if (shop.area != null) ...[
-                    const Gap(6),
-                    Row(
-                      children: [
+                  const Gap(5),
+                  // Time + distance row
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.access_time,
+                        color: Color(0xFF646464),
+                        size: 14,
+                      ),
+                      const Gap(4),
+                      Text(
+                        '$prepTime–${prepTime + 15} min',
+                        style: const TextStyle(
+                          fontFamily: 'Manrope',
+                          fontWeight: FontWeight.w400,
+                          fontSize: 13,
+                          color: Color(0xFF646464),
+                        ),
+                      ),
+                      if (distanceText != null) ...[
+                        const Gap(8),
                         const Icon(
                           Icons.location_on_outlined,
                           color: Color(0xFF646464),
-                          size: 16,
+                          size: 14,
                         ),
-                        const Gap(5),
+                        const Gap(2),
                         Text(
-                          shop.area!,
+                          distanceText,
                           style: const TextStyle(
                             fontFamily: 'Manrope',
-                            fontWeight: FontWeight.w500,
-                            fontSize: 14,
-                            height: 1.5,
-                            color: Color(0xFF040707),
+                            fontWeight: FontWeight.w400,
+                            fontSize: 13,
+                            color: Color(0xFF646464),
                           ),
                         ),
                       ],
-                    ),
-                  ],
+                    ],
+                  ),
                 ],
               ),
             ),

@@ -41,7 +41,7 @@ final class LogoutProvider
   }
 }
 
-String _$logoutHash() => r'a65f930352141420131284a353fe03b5d2f6a3cc';
+String _$logoutHash() => r'6221e11b647313340aab3dd80bd8c2b4f05ed9bd';
 
 abstract class _$Logout extends $Notifier<AsyncValue<bool?>> {
   AsyncValue<bool?> build();

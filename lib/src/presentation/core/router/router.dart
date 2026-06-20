@@ -34,6 +34,8 @@ import '../../features/profile/view/edit_profile_screen.dart';
 import '../../features/support/view/support_screen.dart';
 import '../../features/search/view/search_screen.dart';
 import '../../features/favourites/view/favourites_screen.dart';
+import '../../features/orders/view/dispute_screen.dart';
+import '../../features/orders/view/dispute_list_screen.dart';
 
 import '../widgets/app_startup/startup_widget.dart';
 import '../widgets/bottom_navigation_bar.dart';
@@ -202,6 +204,20 @@ GoRouter goRouter(Ref ref) {
         name: Routes.favourites,
         pageBuilder: (context, state) =>
             const MaterialPage(child: FavouritesScreen()),
+      ),
+      GoRoute(
+        path: Routes.dispute,
+        name: Routes.dispute,
+        pageBuilder: (context, state) {
+          final orderId = state.pathParameters['orderId']!;
+          return MaterialPage(child: DisputeScreen(orderId: orderId));
+        },
+      ),
+      GoRoute(
+        path: Routes.disputes,
+        name: Routes.disputes,
+        pageBuilder: (context, state) =>
+            const MaterialPage(child: DisputeListScreen()),
       ),
       GoRoute(
         path: Routes.bkashPayment,

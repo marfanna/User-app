@@ -11,12 +11,17 @@ class ShopData {
     this.pauseReason,
     this.rating,
     this.totalReviews,
+    this.estimatedPrepTime,
+    this.extraDeliveryCharge,
+    this.latitude,
+    this.longitude,
   });
 
   factory ShopData.fromJson(Map<String, dynamic> json) {
     final images = json['images'] as Map<String, dynamic>?;
     final address = json['address'] as Map<String, dynamic>?;
     final pause = json['emergencyPause'] as Map<String, dynamic>?;
+    final serviceSettings = json['serviceSettings'] as Map<String, dynamic>?;
 
     final rawHours = json['operatingHours'];
     List<Map<String, dynamic>>? hours;
@@ -28,6 +33,16 @@ class ShopData {
     final isOpen = isPaused ? false : _calcIsOpen(hours);
 
     final analytics = json['analytics'] as Map<String, dynamic>?;
+
+    // Coordinates: MongoDB stores as [lng, lat]
+    final addrCoords = address?['coordinates'] as Map<String, dynamic>?;
+    final coordsArr = addrCoords?['coordinates'] as List<dynamic>?;
+    final double? lng = coordsArr != null && coordsArr.length >= 2
+        ? (coordsArr[0] as num?)?.toDouble()
+        : null;
+    final double? lat = coordsArr != null && coordsArr.length >= 2
+        ? (coordsArr[1] as num?)?.toDouble()
+        : null;
 
     return ShopData(
       id: (json['_id'] ?? json['id'] ?? '') as String,
@@ -43,6 +58,12 @@ class ShopData {
       pauseReason: pause?['pauseReason'] as String?,
       rating: (analytics?['averageRating'] as num?)?.toDouble(),
       totalReviews: (analytics?['totalReviews'] as num?)?.toInt(),
+      estimatedPrepTime:
+          (serviceSettings?['estimatedPreparationTime'] as num?)?.toInt(),
+      extraDeliveryCharge:
+          (json['extraDeliveryCharge'] as num?)?.toDouble(),
+      latitude: lat,
+      longitude: lng,
     );
   }
 
@@ -56,6 +77,10 @@ class ShopData {
   final String? pauseReason;
   final double? rating;
   final int? totalReviews;
+  final int? estimatedPrepTime;
+  final double? extraDeliveryCharge;
+  final double? latitude;
+  final double? longitude;
 
   static bool _calcIsOpen(List<Map<String, dynamic>>? hours) {
     if (hours == null || hours.isEmpty) return true;

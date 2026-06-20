@@ -1,10 +1,12 @@
 import 'dart:async';
 
+import 'package:dio/dio.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../di/dependency_injection.dart';
+import '../../data/services/network/endpoints.dart';
 import '../../presentation/core/router/router.dart';
 import 'order_tracking_notification_service.dart';
 
@@ -89,13 +91,26 @@ class FCMService {
   void _handleMessage(RemoteMessage message) {
     debugPrint('FCM Notification tapped with data: ${message.data}');
     final data = message.data;
-    
+
+    // Track campaign notification click
+    final type = data['type'] as String?;
+    final campaignId = data['campaignId'] as String?;
+    if (type == 'campaign' && campaignId != null && campaignId.isNotEmpty) {
+      _trackCampaignClick(campaignId);
+    }
+
     // Check if there is an order ID in the payload
     final orderId = data['order_id'];
     if (orderId != null && orderId.toString().isNotEmpty) {
-      // Navigate directly to the track order screen
       _ref.read(goRouterProvider).push('/track-order/$orderId');
     }
+  }
+
+  void _trackCampaignClick(String campaignId) {
+    Dio().post('${Endpoints.base}admin/campaigns/$campaignId/click').catchError((e) {
+      debugPrint('FCM: failed to track campaign click: $e');
+      return Response(requestOptions: RequestOptions());
+    });
   }
 
   Future<void> _sendTokenToBackend(String token) async {

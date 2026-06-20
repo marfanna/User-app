@@ -36,4 +36,7 @@ class Routes {
   static const String bkashPayment = '/bkash-payment';
   static const String search = '/search';
   static const String favourites = '/favourites';
+  static const String dispute = '/dispute/:orderId';
+  static String disputePath(String orderId) => '/dispute/$orderId';
+  static const String disputes = '/disputes';
 }

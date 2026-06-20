@@ -1,13 +1,12 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:logger/logger.dart';
 
-/// Thin wrapper over FirebaseAnalytics for the customer-facing e-commerce funnel.
-/// Events flow into the same GA4 property as the web app, split automatically
-/// by data stream (Android vs iOS vs Web).
 class AnalyticsService {
   AnalyticsService._();
   static final AnalyticsService instance = AnalyticsService._();
 
   final FirebaseAnalytics _analytics = FirebaseAnalytics.instance;
+  final _log = Logger();
 
   AnalyticsEventItem _item({
     required String itemId,
@@ -31,11 +30,22 @@ class AnalyticsService {
     double? price,
     String? category,
   }) async {
-    await _analytics.logViewItem(
-      currency: 'BDT',
-      value: price ?? 0,
-      items: [_item(itemId: itemId, itemName: itemName, price: price, category: category)],
-    );
+    try {
+      await _analytics.logViewItem(
+        currency: 'BDT',
+        value: price ?? 0,
+        items: [
+          _item(
+            itemId: itemId,
+            itemName: itemName,
+            price: price,
+            category: category,
+          ),
+        ],
+      );
+    } catch (e, st) {
+      _log.e('GA4 logViewItem failed', error: e, stackTrace: st);
+    }
   }
 
   Future<void> logAddToCart({
@@ -45,18 +55,38 @@ class AnalyticsService {
     int quantity = 1,
     String? category,
   }) async {
-    await _analytics.logAddToCart(
-      currency: 'BDT',
-      value: (price ?? 0) * quantity,
-      items: [_item(itemId: itemId, itemName: itemName, price: price, quantity: quantity, category: category)],
-    );
+    try {
+      await _analytics.logAddToCart(
+        currency: 'BDT',
+        value: (price ?? 0) * quantity,
+        items: [
+          _item(
+            itemId: itemId,
+            itemName: itemName,
+            price: price,
+            quantity: quantity,
+            category: category,
+          ),
+        ],
+      );
+    } catch (e, st) {
+      _log.e('GA4 logAddToCart failed', error: e, stackTrace: st);
+    }
   }
 
   Future<void> logBeginCheckout({
     required double value,
     required List<AnalyticsEventItem> items,
   }) async {
-    await _analytics.logBeginCheckout(currency: 'BDT', value: value, items: items);
+    try {
+      await _analytics.logBeginCheckout(
+        currency: 'BDT',
+        value: value,
+        items: items,
+      );
+    } catch (e, st) {
+      _log.e('GA4 logBeginCheckout failed', error: e, stackTrace: st);
+    }
   }
 
   Future<void> logPurchase({
@@ -64,12 +94,16 @@ class AnalyticsService {
     required double value,
     required List<AnalyticsEventItem> items,
   }) async {
-    await _analytics.logPurchase(
-      transactionId: transactionId,
-      currency: 'BDT',
-      value: value,
-      items: items,
-    );
+    try {
+      await _analytics.logPurchase(
+        transactionId: transactionId,
+        currency: 'BDT',
+        value: value,
+        items: items,
+      );
+    } catch (e, st) {
+      _log.e('GA4 logPurchase failed', error: e, stackTrace: st);
+    }
   }
 
   AnalyticsEventItem item({
@@ -79,5 +113,11 @@ class AnalyticsService {
     int quantity = 1,
     String? category,
   }) =>
-      _item(itemId: itemId, itemName: itemName, price: price, quantity: quantity, category: category);
+      _item(
+        itemId: itemId,
+        itemName: itemName,
+        price: price,
+        quantity: quantity,
+        category: category,
+      );
 }

@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../../core/di/dependency_injection.dart';
 import '../../../../core/theme/src/theme_extensions/src/gradients.dart';
 import '../../../../../data/services/cache/cache_service.dart';
+import '../../../../core/router/router_state/router_state_provider.dart';
 import '../../../../core/router/routes.dart';
 import '../../../../core/widgets/gradient_background.dart';
 import '../../../../core/widgets/rounded_back_button.dart';
@@ -62,7 +63,12 @@ class _SelectAreaScreenState extends ConsumerState<SelectAreaScreen> {
     final cache = ref.read(cacheServiceProvider);
     await cache.save<String>(CacheKey.selectedFranchiseId, _selected!.id);
     await cache.save<String>(CacheKey.selectedFranchiseName, _selected!.name);
-    if (mounted) context.goNamed(Routes.home);
+    if (mounted) {
+      // Flip router state out of selectArea first so the redirect guard
+      // (`routerValue == selectArea`) no longer bounces us back, then nav.
+      await ref.read(routerStateProvider.notifier).decideNextRoute();
+      if (mounted) context.goNamed(Routes.home);
+    }
   }
 
   @override
@@ -275,13 +281,13 @@ class _FranchisePickerState extends State<_FranchisePicker> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.75,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      child: Column(
+    return Material(
+      color: Colors.white,
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+      clipBehavior: Clip.antiAlias,
+      child: SizedBox(
+        height: MediaQuery.of(context).size.height * 0.75,
+        child: Column(
         children: [
           const SizedBox(height: 12),
           Container(
@@ -387,6 +393,7 @@ class _FranchisePickerState extends State<_FranchisePicker> {
                   ),
           ),
         ],
+        ),
       ),
     );
   }

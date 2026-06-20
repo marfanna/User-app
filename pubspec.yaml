@@ -2,7 +2,7 @@ name: duare_user
 description: "Duare User App"
 publish_to: 'none'
 
-version: 2.4.3+14
+version: 2.4.3+17
 
 environment:
   sdk: ^3.10.3

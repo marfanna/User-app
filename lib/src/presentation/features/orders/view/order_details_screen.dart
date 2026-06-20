@@ -46,13 +46,19 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     final orderAsync = ref.watch(orderProvider(orderId: widget.orderId));
+    final order = orderAsync.asData?.value;
 
     return Scaffold(
       body: GradientBackground(
         child: SafeArea(
           child: Column(
             children: [
-              const DuareAppBar(title: 'Order Details'),
+              DuareAppBar(
+                title: 'Order Details',
+                trailing: order?.isDelivered == true
+                    ? _HelpButton(orderId: widget.orderId)
+                    : null,
+              ),
               Expanded(
                 child: orderAsync.when(
                   loading: () => const Center(child: CircularProgressIndicator()),
@@ -342,7 +348,9 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
   }
 
   Widget _buildActionButtons(
-      BuildContext context, OrderDetailsUIModel order) {
+    BuildContext context,
+    OrderDetailsUIModel order,
+  ) {
     final reOrderState = ref.watch(reOrderProvider);
     final isLoading = reOrderState is AsyncLoading;
 
@@ -404,6 +412,46 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _HelpButton extends StatelessWidget {
+  const _HelpButton({required this.orderId});
+
+  final String orderId;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => context.push(Routes.disputePath(orderId)),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: const Color(0xFF036FFD).withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.help_outline_rounded,
+              size: 16,
+              color: Color(0xFF036FFD),
+            ),
+            Gap(4),
+            Text(
+              'Help',
+              style: TextStyle(
+                fontFamily: 'Manrope',
+                fontWeight: FontWeight.w700,
+                fontSize: 13,
+                color: Color(0xFF036FFD),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

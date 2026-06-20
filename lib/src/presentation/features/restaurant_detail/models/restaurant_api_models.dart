@@ -150,18 +150,15 @@ class MenuData {
   }
 
   List<MenuItem> get mostOrderedItems {
-    final popular = categories
-        .expand((c) => c.items)
-        .where((i) => i.isPopular && i.isAvailable)
-        .take(6)
-        .toList();
-    final source = popular.isNotEmpty
-        ? popular
-        : categories
-              .expand((c) => c.items)
-              .where((i) => i.isAvailable)
-              .take(6)
-              .toList();
+    final allAvailable = categories.expand((c) => c.items).where((i) => i.isAvailable).toList();
+    final withOrders = allAvailable.where((i) => i.orderCount > 0).toList()
+      ..sort((a, b) => b.orderCount.compareTo(a.orderCount));
+    final popular = allAvailable.where((i) => i.isPopular).toList();
+    final source = withOrders.isNotEmpty
+        ? withOrders.take(6).toList()
+        : popular.isNotEmpty
+            ? popular.take(6).toList()
+            : allAvailable.take(6).toList();
     return source.map((i) => menuItemFromApi(i)).toList();
   }
 }
@@ -287,6 +284,7 @@ class ApiMenuItemData {
     this.isPopular = false,
     this.likeCount = 0,
     this.dislikeCount = 0,
+    this.orderCount = 0,
     this.variants = const [],
     this.options = const [],
     this.preparationTime,
@@ -318,6 +316,7 @@ class ApiMenuItemData {
       isPopular: json['isPopular'] as bool? ?? false,
       likeCount: _toInt(json['likeCount']) ?? 0,
       dislikeCount: _toInt(json['dislikeCount']) ?? 0,
+      orderCount: _toInt(json['orderCount']) ?? 0,
       variants: rawVariants
           .whereType<Map<String, dynamic>>()
           .map(MenuItemVariant.fromJson)
@@ -344,6 +343,7 @@ class ApiMenuItemData {
   final bool isPopular;
   final int likeCount;
   final int dislikeCount;
+  final int orderCount;
   final List<MenuItemVariant> variants;
   final List<MenuItemOption> options;
   final int? preparationTime;

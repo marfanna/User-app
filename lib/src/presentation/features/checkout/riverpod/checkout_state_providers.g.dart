@@ -42,7 +42,7 @@ final class CheckoutDeliveryChargeProvider
 }
 
 String _$checkoutDeliveryChargeHash() =>
-    r'25096caed949c80dfa0e7af3d28057368d30cdba';
+    r'52e91136e3435bb2dc9369f2e9e03bbc224ffcd2';
 
 abstract class _$CheckoutDeliveryCharge extends $Notifier<double?> {
   double? build();
@@ -94,7 +94,7 @@ final class CheckoutRiderTipProvider
   }
 }
 
-String _$checkoutRiderTipHash() => r'fd073fd5441fcf9d4842195117af592e121e6963';
+String _$checkoutRiderTipHash() => r'a586f843b08ca53f311ab29744b16c4d17e7864b';
 
 abstract class _$CheckoutRiderTip extends $Notifier<double> {
   double build();
@@ -146,7 +146,7 @@ final class CheckoutDiscountProvider
   }
 }
 
-String _$checkoutDiscountHash() => r'6db0c3213a07c303f5b2c01aa1c2235ee4ac4ce6';
+String _$checkoutDiscountHash() => r'3ec6e050829b2b928f86ff74e4e72fb2f5cf5b08';
 
 abstract class _$CheckoutDiscount extends $Notifier<int> {
   int build();

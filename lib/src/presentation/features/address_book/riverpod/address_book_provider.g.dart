@@ -87,7 +87,7 @@ final class SelectedAddressIndexProvider
 }
 
 String _$selectedAddressIndexHash() =>
-    r'1f7abcbdbc4f44934d138e9650199da926a33315';
+    r'cc3544fa51be6759f6148518fa2b3a36a2ec6a59';
 
 /// Holds the user-selected address index; null = use API defaultAddressIndex.
 

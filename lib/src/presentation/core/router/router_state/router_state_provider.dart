@@ -84,8 +84,9 @@ class RouterState extends _$RouterState {
       return list
           .whereType<Map<String, dynamic>>()
           .any((f) =>
-              f['_id']?.toString() == franchiseId &&
-              f['isActive'] == true);
+              (f['_id']?.toString() == franchiseId ||
+               f['id']?.toString() == franchiseId) &&
+              (f['isActive'] == true || f['status'] == 'active'));
     } catch (_) {
       return true;
     }

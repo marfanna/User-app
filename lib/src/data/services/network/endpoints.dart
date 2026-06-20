@@ -20,6 +20,8 @@ class Endpoints {
 
   /// Orders
   static const String order = 'orders/{orderId}';
+  static const String myDisputes = 'orders/my-disputes';
+  static const String createDispute = 'orders/{orderId}/dispute';
 
   /// Payments
   static const String initiateBkashPayment = 'payments/bkash/initiate';

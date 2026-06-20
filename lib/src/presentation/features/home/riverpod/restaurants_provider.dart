@@ -23,6 +23,8 @@ final restaurantsProvider = FutureProvider.autoDispose<List<ShopData>>((
       'isActive': 'true',
       'status': 'active',
       'limit': '50',
+      'sortBy': 'createdAt',
+      'sortOrder': 'asc',
     },
   );
 

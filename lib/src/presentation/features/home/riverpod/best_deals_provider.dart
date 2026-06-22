@@ -30,7 +30,7 @@ final bestDealsProvider = FutureProvider.autoDispose<List<FeaturedItem>>((
     list = [];
   }
 
-  return list
+  final items = list
       .whereType<Map<String, dynamic>>()
       .map(FeaturedItem.fromJson)
       .where((f) => f.item.name.isNotEmpty)
@@ -39,4 +39,9 @@ final bestDealsProvider = FutureProvider.autoDispose<List<FeaturedItem>>((
         return openShopIds.contains(id);
       })
       .toList();
+
+  // Shuffle so the spotlight shows items in a different order each visit
+  // (provider is autoDispose → re-shuffles whenever home reloads).
+  items.shuffle();
+  return items;
 });

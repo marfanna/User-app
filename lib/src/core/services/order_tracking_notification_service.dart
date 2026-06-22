@@ -7,8 +7,15 @@ class OrderTrackingNotificationService {
   static const _channelId = 'order_tracking';
   static const _channelName = 'Order Tracking';
 
+  // Separate high-importance channel for promotional/campaign pushes so they
+  // alert (sound + heads-up) instead of the silent order-tracking channel.
+  static const _campaignChannelId = 'campaign_promotions';
+  static const _campaignChannelName = 'Offers & Updates';
+
   // Set by FCMService after router is ready so taps can navigate.
   static void Function(String orderId)? onNotificationTapped;
+  // campaignId, actionUrl
+  static void Function(String campaignId, String actionUrl)? onCampaignTapped;
 
   static Future<void> initialize() async {
     if (_initialized) return;
@@ -35,14 +42,63 @@ class OrderTrackingNotificationService {
           ),
         );
 
+    await _plugin
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(
+          const AndroidNotificationChannel(
+            _campaignChannelId,
+            _campaignChannelName,
+            description: 'Offers, rewards and announcements',
+            importance: Importance.high,
+          ),
+        );
+
     _initialized = true;
   }
 
   static void _onTap(NotificationResponse response) {
-    final orderId = response.payload;
-    if (orderId != null) {
-      onNotificationTapped?.call(orderId);
+    final payload = response.payload;
+    if (payload == null) return;
+    // Campaign payloads are encoded as "campaign|<campaignId>|<actionUrl>".
+    if (payload.startsWith('campaign|')) {
+      final parts = payload.split('|');
+      final campaignId = parts.length > 1 ? parts[1] : '';
+      final actionUrl = parts.length > 2 ? parts.sublist(2).join('|') : '';
+      onCampaignTapped?.call(campaignId, actionUrl);
+      return;
     }
+    onNotificationTapped?.call(payload);
+  }
+
+  /// Show a one-off promotional/campaign notification (foreground display).
+  static Future<void> showCampaign({
+    required String title,
+    required String body,
+    String campaignId = '',
+    String actionUrl = '',
+  }) async {
+    await initialize();
+
+    final notifId = DateTime.now().millisecondsSinceEpoch.remainder(100000);
+
+    final androidDetails = AndroidNotificationDetails(
+      _campaignChannelId,
+      _campaignChannelName,
+      channelDescription: 'Offers, rewards and announcements',
+      importance: Importance.high,
+      priority: Priority.high,
+      styleInformation: BigTextStyleInformation(body, contentTitle: title),
+      ticker: title,
+    );
+
+    await _plugin.show(
+      notifId,
+      title,
+      body,
+      NotificationDetails(android: androidDetails),
+      payload: 'campaign|$campaignId|$actionUrl',
+    );
   }
 
   static Future<void> showOrUpdate({

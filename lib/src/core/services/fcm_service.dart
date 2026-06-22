@@ -46,6 +46,13 @@ class FCMService {
     OrderTrackingNotificationService.onNotificationTapped = (orderId) {
       _ref.read(goRouterProvider).push('/track-order/$orderId');
     };
+    // Wire campaign notification tap → track click + open its action url
+    OrderTrackingNotificationService.onCampaignTapped = (campaignId, actionUrl) {
+      if (campaignId.isNotEmpty) _trackCampaignClick(campaignId);
+      if (actionUrl.isNotEmpty && actionUrl.startsWith('/')) {
+        _ref.read(goRouterProvider).push(actionUrl);
+      }
+    };
     await OrderTrackingNotificationService.initialize();
 
     // Foreground FCM → update tracking notification
@@ -70,6 +77,24 @@ class FCMService {
   void _handleOrderTrackingMessage(RemoteMessage message) {
     final data = message.data;
     final type = data['type'] as String?;
+
+    // Campaign/promo pushes: the OS only auto-displays tray notifications when
+    // the app is backgrounded. In the foreground we must show it ourselves.
+    if (type == 'campaign') {
+      final notif = message.notification;
+      final title = notif?.title ?? (data['title'] as String?) ?? 'Duare';
+      final body = notif?.body ?? (data['body'] as String?) ?? '';
+      if (body.isNotEmpty || title.isNotEmpty) {
+        OrderTrackingNotificationService.showCampaign(
+          title: title,
+          body: body,
+          campaignId: data['campaignId'] as String? ?? '',
+          actionUrl: data['actionUrl'] as String? ?? '',
+        );
+      }
+      return;
+    }
+
     if (type != 'order_updated' && type != 'order_assigned') return;
 
     final orderId = data['order_id'] as String?;

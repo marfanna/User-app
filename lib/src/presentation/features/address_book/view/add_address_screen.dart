@@ -275,6 +275,52 @@ class _AddAddressScreenState extends ConsumerState<AddAddressScreen> {
     setState(() => _titleController.text = title);
   }
 
+  // ── Forward geocoding ───────────────────────────────────────────────────
+  // Resolve the typed address text → coordinates. Lets a user out of range
+  // (e.g. abroad ordering to their hometown) save an address by typing it,
+  // without needing GPS or to hand-drop the pin.
+  Future<bool> _ensureCoordinates() async {
+    if (_lat != null && _lng != null) return true;
+    final query = _addressController.text.trim();
+    if (query.isEmpty) return false;
+    try {
+      final res = await _dio.get(
+        'https://maps.googleapis.com/maps/api/geocode/json',
+        queryParameters: {
+          'address': query,
+          'components': 'country:BD',
+          'key': _kGoogleApiKey,
+          'language': 'en',
+        },
+      );
+      final results = res.data['results'] as List<dynamic>? ?? [];
+      if (results.isEmpty) return false;
+      final first = results.first as Map;
+      final loc = first['geometry']?['location'];
+      if (loc == null) return false;
+      _lat = (loc['lat'] as num).toDouble();
+      _lng = (loc['lng'] as num).toDouble();
+
+      final components = first['address_components'] as List<dynamic>? ?? [];
+      for (final comp in components) {
+        final types = (comp['types'] as List?)?.cast<String>() ?? [];
+        final name = comp['long_name'] as String? ?? '';
+        if (types.contains('locality') && _city.isEmpty) _city = name;
+        if (types.contains('administrative_area_level_2') &&
+            _district.isEmpty) {
+          _district = name;
+        }
+        if (types.contains('administrative_area_level_1') &&
+            _division.isEmpty) {
+          _division = name;
+        }
+      }
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   // ── Save ──────────────────────────────────────────────────────────────────
 
   Future<void> _saveAddress() async {
@@ -294,18 +340,26 @@ class _AddAddressScreenState extends ConsumerState<AddAddressScreen> {
       );
       return;
     }
-    if (_lat == null || _lng == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Pin your location on the map or use GPS before saving',
-          ),
-        ),
-      );
-      return;
-    }
 
     setState(() => _saving = true);
+
+    // No pin yet → try to resolve the typed address to coordinates.
+    if (_lat == null || _lng == null) {
+      final found = await _ensureCoordinates();
+      if (!found) {
+        if (mounted) {
+          setState(() => _saving = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                "Couldn't locate that address. Tap \"Adjust pin\" to set it on the map.",
+              ),
+            ),
+          );
+        }
+        return;
+      }
+    }
     try {
       final dio = ref.read(dioProvider);
       final typeNorm = title.toLowerCase();

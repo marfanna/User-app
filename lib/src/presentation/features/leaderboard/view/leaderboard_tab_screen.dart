@@ -69,8 +69,24 @@ class LeaderboardTabScreen extends ConsumerWidget {
                         ),
                       );
                     }
-                    final top3 = data.standings.take(3).toList();
-                    final rest = data.standings.skip(3).toList();
+                    final standings = data.standings;
+                    final top3 = standings.take(3).toList();
+                    // Ranks 4–10 only (top 3 are on the podium above).
+                    final next = standings.skip(3).take(7).toList();
+
+                    // Find the current user; show their row separately when
+                    // they're outside the top 10.
+                    LeaderboardEntry? me;
+                    if (currentUserId.isNotEmpty) {
+                      for (final e in standings) {
+                        if (e.id == currentUserId) {
+                          me = e;
+                          break;
+                        }
+                      }
+                    }
+                    final showMeSeparately = me != null && me.rank > 10;
+
                     return SingleChildScrollView(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Column(
@@ -78,9 +94,13 @@ class LeaderboardTabScreen extends ConsumerWidget {
                           _LeaderboardPodium(top3: top3),
                           const Gap(16),
                           _LeaderboardList(
-                            entries: rest,
+                            entries: next,
                             currentUserId: currentUserId,
                           ),
+                          if (showMeSeparately) ...[
+                            const _YourPositionDivider(),
+                            _LeaderboardListTile(entry: me, isYou: true),
+                          ],
                           const Gap(32),
                         ],
                       ),
@@ -724,6 +744,35 @@ class _LeaderboardPodium extends StatelessWidget {
                 isFirst: true,
               ),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+class _YourPositionDivider extends StatelessWidget {
+  const _YourPositionDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Padding(
+      padding: EdgeInsets.only(bottom: 10),
+      child: Row(
+        children: [
+          Expanded(child: Divider(color: Color(0xFFD2D3D6))),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 12),
+            child: Text(
+              'Your position',
+              style: TextStyle(
+                fontFamily: 'Manrope',
+                fontWeight: FontWeight.w600,
+                fontSize: 12,
+                color: Color(0xFF585C67),
+              ),
+            ),
+          ),
+          Expanded(child: Divider(color: Color(0xFFD2D3D6))),
         ],
       ),
     );

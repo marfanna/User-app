@@ -2,7 +2,7 @@ import 'dart:io' show Platform;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+// import 'package:flutter_svg/flutter_svg.dart'; // re-enable with bKash option
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 
@@ -194,30 +194,31 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
               ),
             ),
           ),
-          const Gap(10),
-          _buildPaymentOption(
-            method: _PaymentMethod.bkash,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  'bKash',
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontWeight: FontWeight.w500,
-                    fontSize: 16,
-                    color: Colors.black,
-                  ),
-                ),
-                const Gap(8),
-                SvgPicture.asset(
-                  'assets/icons/bkash.svg',
-                  width: 28,
-                  height: 24,
-                ),
-              ],
-            ),
-          ),
+          // bKash option hidden for now — uncomment to re-enable.
+          // const Gap(10),
+          // _buildPaymentOption(
+          //   method: _PaymentMethod.bkash,
+          //   child: Row(
+          //     mainAxisSize: MainAxisSize.min,
+          //     children: [
+          //       const Text(
+          //         'bKash',
+          //         style: TextStyle(
+          //           fontFamily: 'Poppins',
+          //           fontWeight: FontWeight.w500,
+          //           fontSize: 16,
+          //           color: Colors.black,
+          //         ),
+          //       ),
+          //       const Gap(8),
+          //       SvgPicture.asset(
+          //         'assets/icons/bkash.svg',
+          //         width: 28,
+          //         height: 24,
+          //       ),
+          //     ],
+          //   ),
+          // ),
         ],
       ),
     );

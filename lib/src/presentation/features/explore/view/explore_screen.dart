@@ -26,6 +26,7 @@ class ExploreScreen extends StatelessWidget {
       const _CategoryItem(
         title: 'Medicine',
         imagePath: 'assets/images/explore/medicine.png',
+        route: Routes.medicine,
       ),
       const _CategoryItem(title: 'Mart', imagePath: 'assets/images/explore/mart.png'),
       const _CategoryItem(

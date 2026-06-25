@@ -49,9 +49,7 @@ class FCMService {
     // Wire campaign notification tap → track click + open its action url
     OrderTrackingNotificationService.onCampaignTapped = (campaignId, actionUrl) {
       if (campaignId.isNotEmpty) _trackCampaignClick(campaignId);
-      if (actionUrl.isNotEmpty && actionUrl.startsWith('/')) {
-        _ref.read(goRouterProvider).push(actionUrl);
-      }
+      _navigateToActionUrl(actionUrl);
     };
     await OrderTrackingNotificationService.initialize();
 
@@ -106,6 +104,10 @@ class FCMService {
         orderId: orderId,
         orderNumber: orderNumber,
         status: status,
+        shopName: data['shopName'] as String?,
+        etaText: data['eta'] as String?,
+        riderName: data['riderName'] as String?,
+        riderPhone: data['riderPhone'] as String?,
       );
     }
 
@@ -117,11 +119,15 @@ class FCMService {
     debugPrint('FCM Notification tapped with data: ${message.data}');
     final data = message.data;
 
-    // Track campaign notification click
     final type = data['type'] as String?;
-    final campaignId = data['campaignId'] as String?;
-    if (type == 'campaign' && campaignId != null && campaignId.isNotEmpty) {
-      _trackCampaignClick(campaignId);
+
+    if (type == 'campaign') {
+      final campaignId = data['campaignId'] as String?;
+      if (campaignId != null && campaignId.isNotEmpty) {
+        _trackCampaignClick(campaignId);
+      }
+      _navigateToActionUrl(data['actionUrl'] as String? ?? '');
+      return;
     }
 
     // Check if there is an order ID in the payload
@@ -129,6 +135,20 @@ class FCMService {
     if (orderId != null && orderId.toString().isNotEmpty) {
       _ref.read(goRouterProvider).push('/track-order/$orderId');
     }
+  }
+
+  void _navigateToActionUrl(String actionUrl) {
+    if (actionUrl.isEmpty) return;
+    String path = actionUrl;
+    // Strip scheme+host if a full URL was provided (e.g. https://duare.app/fr01/...)
+    if (actionUrl.startsWith('http://') || actionUrl.startsWith('https://')) {
+      final uri = Uri.tryParse(actionUrl);
+      if (uri == null) return;
+      path = uri.path;
+      if (uri.query.isNotEmpty) path = '$path?${uri.query}';
+    }
+    if (path.isEmpty || path == '/') return;
+    _ref.read(goRouterProvider).push(path);
   }
 
   void _trackCampaignClick(String campaignId) {

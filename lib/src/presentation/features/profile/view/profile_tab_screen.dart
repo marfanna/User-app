@@ -80,6 +80,10 @@ class _ProfileTabScreenState extends ConsumerState<ProfileTabScreen> {
                         onTap: () => context.pushNamed(Routes.favourites),
                       ),
                       _buildMenuItem(
+                        title: 'My Rewards',
+                        onTap: () => context.pushNamed(Routes.myRewards),
+                      ),
+                      _buildMenuItem(
                         title: 'My Disputes',
                         onTap: () => context.pushNamed(Routes.disputes),
                       ),

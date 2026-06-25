@@ -379,7 +379,12 @@ class _TrackOrderScreenState extends ConsumerState<TrackOrderScreen> {
       ),
       (
         label: 'Processing',
-        time: currentStep >= 1 ? fmt(order.preparingAt ?? order.confirmedAt ?? order.updatedAt) : null,
+        // Only the real preparing/confirmed time. Never fall back to updatedAt
+        // — that's the last mutation (usually delivery), so Processing showed
+        // the delivery time, equal to Delivered and out of order vs pickup.
+        time: currentStep >= 1
+            ? fmt(order.preparingAt ?? order.confirmedAt)
+            : null,
         active: currentStep >= 1,
         isCurrent: currentStep == 1,
       ),

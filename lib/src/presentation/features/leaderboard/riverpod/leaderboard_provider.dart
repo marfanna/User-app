@@ -36,3 +36,28 @@ final leaderboardProvider =
         .toList(),
   );
 });
+
+/// The logged-in customer's own standing (works even outside the top 100).
+/// Returns null when they have no points this month. Auth token is attached by
+/// the Dio interceptor.
+final myRankProvider = FutureProvider.autoDispose<MyStanding?>((ref) async {
+  final cache = ref.read(cacheServiceProvider);
+  final franchiseId = cache.get<String>(CacheKey.selectedFranchiseId);
+  if (franchiseId == null || franchiseId.isEmpty) return null;
+
+  final dio = ref.read(dioProvider);
+  try {
+    final response = await dio.get(
+      'leaderboard/my-rank',
+      queryParameters: {'franchiseId': franchiseId},
+    );
+    final body = response.data as Map<String, dynamic>;
+    final data = body['data'] as Map<String, dynamic>? ?? {};
+    final standing = data['standing'] as Map<String, dynamic>?;
+    if (standing == null) return null;
+    return MyStanding.fromJson(standing);
+  } catch (_) {
+    // Not logged in / no standing — fall back to top-100 detection in the UI.
+    return null;
+  }
+});

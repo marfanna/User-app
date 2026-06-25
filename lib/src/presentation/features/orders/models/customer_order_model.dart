@@ -9,6 +9,7 @@ class CustomerOrderModel {
     required this.status,
     required this.paymentMethod,
     required this.paymentStatus,
+    this.shopCategory,
     this.rating,
     this.sentiment,
     this.foodRating,
@@ -22,6 +23,10 @@ class CustomerOrderModel {
     final shopName = shopRaw is Map
         ? (shopRaw['name'] as String? ?? 'Unknown')
         : 'Unknown';
+    final shopCategory = shopRaw is Map
+        ? (_extractCategory(shopRaw['category']) ??
+              _extractCategory(shopRaw['shopCategory']))
+        : _extractCategory(json['category']);
 
     final orderId =
         (json['orderId'] as String? ??
@@ -41,6 +46,7 @@ class CustomerOrderModel {
       status: json['status'] as String? ?? 'pending',
       paymentMethod: json['paymentMethod'] as String? ?? 'cash_on_delivery',
       paymentStatus: json['paymentStatus'] as String? ?? 'pending',
+      shopCategory: shopCategory,
       rating: json['rating'] as int?,
       sentiment: json['sentiment'] as String?,
       foodRating: json['foodRating'] as int?,
@@ -58,6 +64,11 @@ class CustomerOrderModel {
   final String status;
   final String paymentMethod;
   final String paymentStatus;
+
+  /// Top-level shop category slug (e.g. 'restaurant', 'pharmacy') when the API
+  /// populates the shop reference. Used to scope reorder strips per vertical.
+  /// Null when the backend doesn't include it.
+  final String? shopCategory;
 
   // Legacy feedback fields
   final int? rating;
@@ -93,4 +104,16 @@ double? _toDouble(dynamic v) {
   if (v is int) return v.toDouble();
   if (v is String) return double.tryParse(v);
   return null;
+}
+
+/// Safely reads a shop category that may arrive as a plain string, a populated
+/// object ({ value, label, _id }), or an ObjectId — never throws on a cast.
+String? _extractCategory(dynamic v) {
+  if (v == null) return null;
+  if (v is String) return v.isEmpty ? null : v;
+  if (v is Map) {
+    final picked = v['value'] ?? v['label'] ?? v['_id'];
+    return picked?.toString();
+  }
+  return v.toString();
 }

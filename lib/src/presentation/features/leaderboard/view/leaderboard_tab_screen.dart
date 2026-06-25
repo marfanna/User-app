@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../core/router/routes.dart';
 import '../../../core/theme/src/theme_extensions/src/gradients.dart';
 import '../../../core/widgets/gradient_background.dart';
 import '../../profile/riverpod/customer_profile_provider.dart';
@@ -15,7 +17,10 @@ class LeaderboardTabScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final leaderboardAsync = ref.watch(leaderboardProvider);
     final profileAsync = ref.watch(customerProfileProvider);
-    final currentUserId = profileAsync.asData?.value.id ?? '';
+    final profile = profileAsync.asData?.value;
+    final currentUserId = profile?.id ?? '';
+    // Own standing even when outside the top 100.
+    final myStanding = ref.watch(myRankProvider).asData?.value;
 
     return Scaffold(
       body: GradientBackground(
@@ -74,8 +79,7 @@ class LeaderboardTabScreen extends ConsumerWidget {
                     // Ranks 4–10 only (top 3 are on the podium above).
                     final next = standings.skip(3).take(7).toList();
 
-                    // Find the current user; show their row separately when
-                    // they're outside the top 10.
+                    // Find the current user in the loaded standings (top 100).
                     LeaderboardEntry? me;
                     if (currentUserId.isNotEmpty) {
                       for (final e in standings) {
@@ -85,7 +89,26 @@ class LeaderboardTabScreen extends ConsumerWidget {
                         }
                       }
                     }
-                    final showMeSeparately = me != null && me.rank > 10;
+
+                    // The row to show under "Your position":
+                    // - in top 100 but below the top 10 → use that entry
+                    // - outside the top 100 → build from /my-rank + profile
+                    LeaderboardEntry? meRow;
+                    if (me != null && me.rank > 10) {
+                      meRow = me;
+                    } else if (me == null &&
+                        myStanding != null &&
+                        profile != null) {
+                      meRow = LeaderboardEntry(
+                        id: profile.id,
+                        rank: myStanding.rank,
+                        score: myStanding.score,
+                        totalOrders: myStanding.totalOrders,
+                        name: profile.name,
+                        profileImage: profile.profileImage,
+                      );
+                    }
+                    final showMeSeparately = meRow != null;
 
                     return SingleChildScrollView(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -99,7 +122,7 @@ class LeaderboardTabScreen extends ConsumerWidget {
                           ),
                           if (showMeSeparately) ...[
                             const _YourPositionDivider(),
-                            _LeaderboardListTile(entry: me, isYou: true),
+                            _LeaderboardListTile(entry: meRow, isYou: true),
                           ],
                           const Gap(32),
                         ],
@@ -175,17 +198,20 @@ class _LeaderboardHeader extends ConsumerWidget {
                   ),
                 ],
               ),
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.shopping_bag_outlined,
-                  color: Color(0xFF1C1C1C),
-                  size: 24,
+              GestureDetector(
+                onTap: () => context.push(Routes.cart),
+                child: Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.shopping_bag_outlined,
+                    color: Color(0xFF1C1C1C),
+                    size: 24,
+                  ),
                 ),
               ),
             ],

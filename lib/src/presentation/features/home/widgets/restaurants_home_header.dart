@@ -5,15 +5,33 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/router/routes.dart';
 import '../../cart/riverpod/cart_provider.dart';
+import '../../notifications/riverpod/notifications_provider.dart';
 
-class RestaurantsHomeHeader extends ConsumerWidget {
+class RestaurantsHomeHeader extends ConsumerStatefulWidget {
   const RestaurantsHomeHeader({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<RestaurantsHomeHeader> createState() =>
+      _RestaurantsHomeHeaderState();
+}
+
+class _RestaurantsHomeHeaderState extends ConsumerState<RestaurantsHomeHeader> {
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(
+      () => ref.read(notificationsProvider.notifier).fetch(),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final cartCount = ref
         .watch(cartProvider)
         .fold<int>(0, (sum, c) => sum + c.quantity);
+    final unreadCount = ref.watch(
+      notificationsProvider.select((s) => s.unreadCount),
+    );
 
     return SizedBox(
       width: double.infinity,
@@ -64,35 +82,39 @@ class RestaurantsHomeHeader extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               // Notification icon with badge
-              Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  const Icon(
-                    Icons.notifications_outlined,
-                    color: Color(0xFF1C1C1C),
-                    size: 28,
-                  ),
-                  Positioned(
-                    top: -2,
-                    right: -2,
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: const BoxDecoration(
-                        color: Colors.red,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Text(
-                        '2',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          height: 1.0,
+              GestureDetector(
+                onTap: () => context.push(Routes.notifications),
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    const Icon(
+                      Icons.notifications_outlined,
+                      color: Color(0xFF1C1C1C),
+                      size: 28,
+                    ),
+                    if (unreadCount > 0)
+                      Positioned(
+                        top: -2,
+                        right: -2,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: const BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Text(
+                            unreadCount > 99 ? '99+' : '$unreadCount',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              height: 1.0,
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
               const Gap(16),
 

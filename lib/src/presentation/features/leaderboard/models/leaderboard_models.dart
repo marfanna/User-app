@@ -39,3 +39,25 @@ class LeaderboardData {
   final String currentMonth;
   final List<LeaderboardEntry> standings;
 }
+
+/// The logged-in customer's own standing — populated even when they are outside
+/// the top 100 (from `GET /leaderboard/my-rank`). Null when they have no points.
+class MyStanding {
+  const MyStanding({
+    required this.rank,
+    required this.score,
+    required this.totalOrders,
+  });
+
+  factory MyStanding.fromJson(Map<String, dynamic> json) {
+    return MyStanding(
+      rank: (json['rank'] as num?)?.toInt() ?? 0,
+      score: (json['score'] as num?)?.toDouble() ?? 0,
+      totalOrders: (json['totalOrders'] as num?)?.toInt() ?? 0,
+    );
+  }
+
+  final int rank;
+  final double score;
+  final int totalOrders;
+}

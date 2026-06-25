@@ -18,6 +18,13 @@ class Routes {
 
   // Other pages
   static const String restaurants = '/restaurants';
+  static const String medicine = '/medicine';
+  static const String medicineCategories = '/medicine/categories';
+  static const String medicineProduct = '/medicine/product/:id';
+  static String medicineProductPath(String id) => '/medicine/product/$id';
+  static const String pharmacy = '/pharmacy/:id';
+  static String pharmacyPath(String id) => '/pharmacy/$id';
+  static const String medicineListing = '/medicine/listing';
   static const String restaurantDetail = '/restaurant/:id';
   static String restaurantDetailPath(String id) => '/restaurant/$id';
   static const String restaurantReviews = '/restaurant-reviews';
@@ -39,4 +46,5 @@ class Routes {
   static const String dispute = '/dispute/:orderId';
   static String disputePath(String orderId) => '/dispute/$orderId';
   static const String disputes = '/disputes';
+  static const String myRewards = '/my-rewards';
 }

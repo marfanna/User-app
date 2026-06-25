@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class OrderTrackingNotificationService {
   static final _plugin = FlutterLocalNotificationsPlugin();
@@ -20,7 +23,7 @@ class OrderTrackingNotificationService {
   static Future<void> initialize() async {
     if (_initialized) return;
 
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings = AndroidInitializationSettings('@drawable/ic_stat_notify');
     const settings = InitializationSettings(android: androidSettings);
 
     await _plugin.initialize(
@@ -61,6 +64,7 @@ class OrderTrackingNotificationService {
     final payload = response.payload;
     if (payload == null) return;
     // Campaign payloads are encoded as "campaign|<campaignId>|<actionUrl>".
+    // Both direct tap and the "Open" action button fire the same handler.
     if (payload.startsWith('campaign|')) {
       final parts = payload.split('|');
       final campaignId = parts.length > 1 ? parts[1] : '';
@@ -68,6 +72,20 @@ class OrderTrackingNotificationService {
       onCampaignTapped?.call(campaignId, actionUrl);
       return;
     }
+    // Order payloads: "order|<orderId>|<riderPhone>".
+    if (payload.startsWith('order|')) {
+      final parts = payload.split('|');
+      final orderId = parts.length > 1 ? parts[1] : '';
+      final riderPhone = parts.length > 2 ? parts[2] : '';
+      if (response.actionId == 'call_rider' && riderPhone.isNotEmpty) {
+        unawaited(launchUrl(Uri.parse('tel:$riderPhone')));
+        return;
+      }
+      // "track" action or tapping the body → open the order.
+      if (orderId.isNotEmpty) onNotificationTapped?.call(orderId);
+      return;
+    }
+    // Legacy payloads were the bare orderId.
     onNotificationTapped?.call(payload);
   }
 
@@ -90,6 +108,16 @@ class OrderTrackingNotificationService {
       priority: Priority.high,
       styleInformation: BigTextStyleInformation(body, contentTitle: title),
       ticker: title,
+      actions: actionUrl.isNotEmpty
+          ? [
+              const AndroidNotificationAction(
+                'open_action',
+                'Open',
+                showsUserInterface: true,
+                cancelNotification: true,
+              ),
+            ]
+          : null,
     );
 
     await _plugin.show(
@@ -105,6 +133,10 @@ class OrderTrackingNotificationService {
     required String orderId,
     required String orderNumber,
     required String status,
+    String? shopName,
+    String? etaText,
+    String? riderName,
+    String? riderPhone,
   }) async {
     await initialize();
 
@@ -118,7 +150,47 @@ class OrderTrackingNotificationService {
     const maxProgress = 3;
     final notifId = orderId.hashCode.abs() % 100000;
 
-    final body = _buildProgressText(step);
+    // Title leads with the live status + ETA (when supplied), not "Order #...".
+    final eta = (etaText != null && etaText.trim().isNotEmpty && step < 3)
+        ? ' · ${etaText.trim()}'
+        : '';
+    final title = '$label$eta';
+
+    // Collapsed line: shop + short order id.
+    final shop = (shopName != null && shopName.trim().isNotEmpty)
+        ? shopName.trim()
+        : 'Your order';
+    final collapsed = '$shop · #$orderNumber';
+
+    // Expanded view: single-line stepper, plus rider line when on the way.
+    final stepper = _buildProgressText(step);
+    var riderLine = '';
+    if (step >= 2 && riderName != null && riderName.trim().isNotEmpty) {
+      final phone = (riderPhone != null && riderPhone.trim().isNotEmpty)
+          ? ' · ${riderPhone.trim()}'
+          : '';
+      riderLine = '\n🛵 ${riderName.trim()}$phone';
+    }
+    final bigText = '$collapsed\n$stepper$riderLine';
+
+    final actions = <AndroidNotificationAction>[
+      const AndroidNotificationAction(
+        'track',
+        'Track',
+        showsUserInterface: true,
+      ),
+    ];
+    final hasRiderCall =
+        step >= 2 && riderPhone != null && riderPhone.trim().isNotEmpty;
+    if (hasRiderCall) {
+      actions.add(
+        const AndroidNotificationAction(
+          'call_rider',
+          'Call rider',
+          showsUserInterface: true,
+        ),
+      );
+    }
 
     final androidDetails = AndroidNotificationDetails(
       _channelId,
@@ -126,7 +198,7 @@ class OrderTrackingNotificationService {
       channelDescription: 'Live updates while your order is on its way',
       importance: Importance.low,
       priority: Priority.low,
-      ongoing: true,
+      ongoing: step < 3, // dismissible once delivered
       autoCancel: false,
       onlyAlertOnce: true,
       showProgress: true,
@@ -136,19 +208,20 @@ class OrderTrackingNotificationService {
       playSound: false,
       enableVibration: false,
       styleInformation: BigTextStyleInformation(
-        body,
-        contentTitle: 'Order #$orderNumber',
-        summaryText: label,
+        bigText,
+        contentTitle: title,
+        summaryText: collapsed,
       ),
-      ticker: label,
+      ticker: title,
+      actions: actions,
     );
 
     await _plugin.show(
       notifId,
-      'Order #$orderNumber',
-      label,
+      title,
+      collapsed,
       NotificationDetails(android: androidDetails),
-      payload: orderId,
+      payload: 'order|$orderId|${riderPhone ?? ''}',
     );
   }
 
@@ -158,13 +231,13 @@ class OrderTrackingNotificationService {
 
   static (int step, String label) _statusToStep(String status) {
     return switch (status) {
-      'pending' => (0, 'Order placed, waiting for confirmation...'),
+      'pending' => (0, 'Order placed'),
       'confirmed' || 'preparing' || 'assigned' || 'ready_for_pickup' =>
-        (1, 'Restaurant is preparing your order'),
-      'picked_up' || 'on_way' => (2, 'Rider is on the way to you'),
-      'delivered' => (3, 'Your order has been delivered!'),
+        (1, 'Preparing your order'),
+      'picked_up' || 'on_way' => (2, 'On the way'),
+      'delivered' => (3, 'Delivered ✅'),
       'cancelled' || 'rejected' || 'refunded' => (-1, ''),
-      _ => (0, 'Processing your order...'),
+      _ => (0, 'Processing your order'),
     };
   }
 

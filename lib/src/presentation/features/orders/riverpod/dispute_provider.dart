@@ -147,6 +147,26 @@ class DisputeNotifier extends _$DisputeNotifier {
 // ── Ticket model ─────────────────────────────────────────────────────────────
 
 class DisputeTicket {
+
+  factory DisputeTicket.fromJson(Map<String, dynamic> json) {
+    final orderRaw = json['orderId'];
+    final shopRaw = json['shopId'];
+    final resolution = json['resolution'] as Map<String, dynamic>?;
+    return DisputeTicket(
+      id: json['_id'] as String? ?? '',
+      category: json['category'] as String? ?? '',
+      description: json['description'] as String? ?? '',
+      status: json['status'] as String? ?? 'open',
+      createdAt: DateTime.tryParse(
+            json['createdAt'] as String? ?? '',
+          ) ??
+          DateTime.now(),
+      orderId: orderRaw is Map ? orderRaw['orderId'] as String? : null,
+      shopName: shopRaw is Map ? shopRaw['name'] as String? : null,
+      resolutionType: resolution?['type'] as String?,
+      resolutionNotes: resolution?['notes'] as String?,
+    );
+  }
   const DisputeTicket({
     required this.id,
     required this.category,
@@ -168,26 +188,6 @@ class DisputeTicket {
   final String? shopName;
   final String? resolutionType;
   final String? resolutionNotes;
-
-  factory DisputeTicket.fromJson(Map<String, dynamic> json) {
-    final orderRaw = json['orderId'];
-    final shopRaw = json['shopId'];
-    final resolution = json['resolution'] as Map<String, dynamic>?;
-    return DisputeTicket(
-      id: json['_id'] as String? ?? '',
-      category: json['category'] as String? ?? '',
-      description: json['description'] as String? ?? '',
-      status: json['status'] as String? ?? 'open',
-      createdAt: DateTime.tryParse(
-            json['createdAt'] as String? ?? '',
-          ) ??
-          DateTime.now(),
-      orderId: orderRaw is Map ? orderRaw['orderId'] as String? : null,
-      shopName: shopRaw is Map ? shopRaw['name'] as String? : null,
-      resolutionType: resolution?['type'] as String?,
-      resolutionNotes: resolution?['notes'] as String?,
-    );
-  }
 
   String get categoryLabel => switch (category) {
         'missing_item' => 'Missing Item',

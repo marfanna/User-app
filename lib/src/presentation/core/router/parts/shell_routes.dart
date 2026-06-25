@@ -22,6 +22,13 @@ StatefulShellRoute _shellRoutes(Ref ref) {
               return const NoTransitionPage(child: RestaurantsHomeScreen());
             },
           ),
+          GoRoute(
+            path: Routes.medicine,
+            name: Routes.medicine,
+            pageBuilder: (context, state) {
+              return const NoTransitionPage(child: MedicineHomeScreen());
+            },
+          ),
         ],
       ),
       StatefulShellBranch(

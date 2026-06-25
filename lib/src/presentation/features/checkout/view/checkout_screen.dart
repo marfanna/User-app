@@ -15,6 +15,7 @@ import '../../../core/router/routes.dart';
 import '../../../core/widgets/rounded_back_button.dart';
 import '../../address_book/riverpod/address_book_provider.dart';
 import '../../cart/riverpod/cart_provider.dart';
+import '../../rewards/riverpod/rewards_provider.dart';
 import '../riverpod/checkout_state_providers.dart';
 
 enum _PaymentMethod { cash, bkash }
@@ -64,7 +65,20 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     final deliveryCharge = ref.watch(checkoutDeliveryChargeProvider);
     final riderTip = ref.watch(checkoutRiderTipProvider);
     final discount = ref.watch(checkoutDiscountProvider);
-    final total = subtotal + (deliveryCharge ?? 0) + riderTip - discount;
+
+    // Leaderboard reward: if the user holds an active free-delivery reward and
+    // there is actually a fee to waive, show delivery as free. Backend remains
+    // the source of truth at order time — this just keeps the UI honest.
+    final hasFreeDelivery = ref
+        .watch(myRewardsProvider)
+        .maybeWhen(
+          data: (rewards) => rewards.any((r) => r.grantsFreeDeliveryNow),
+          orElse: () => false,
+        );
+    final rawDelivery = deliveryCharge ?? 0;
+    final deliveryWaived = hasFreeDelivery && rawDelivery > 0;
+    final effectiveDelivery = deliveryWaived ? 0.0 : rawDelivery;
+    final total = subtotal + effectiveDelivery + riderTip - discount;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FF),
@@ -96,7 +110,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       ),
       bottomNavigationBar: _buildSummaryPanel(
         subtotal: subtotal,
-        deliveryCharge: deliveryCharge,
+        deliveryCharge: effectiveDelivery,
+        deliveryWaived: deliveryWaived,
         riderTip: riderTip,
         discount: discount,
         total: total,
@@ -343,6 +358,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   Widget _buildSummaryPanel({
     required double subtotal,
     required double? deliveryCharge,
+    required bool deliveryWaived,
     required double riderTip,
     required int discount,
     required double total,
@@ -393,7 +409,11 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                   children: [
                     _summaryValue('BDT ${subtotal.toInt()}'),
                     const Gap(2),
-                    _summaryValue('BDT ${(deliveryCharge ?? 0).toInt()}'),
+                    _summaryValue(
+                      deliveryWaived
+                          ? 'FREE'
+                          : 'BDT ${(deliveryCharge ?? 0).toInt()}',
+                    ),
                     const Gap(2),
                     _summaryValue('BDT $discount'),
                     const Gap(2),
@@ -567,10 +587,18 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 
       final orderData = response.data['data'];
       final orderId = orderData['_id'];
+      // Backend is the source of truth for what is owed: it waives the delivery
+      // fee when a leaderboard reward applies, so the client-side total can be
+      // higher than what the order actually costs. Use the server grandTotal
+      // (fallback to the client total only if the field is missing).
+      final num grandTotalNum = (orderData['grandTotal'] is num)
+          ? orderData['grandTotal'] as num
+          : totalAmount;
+      final double payableAmount = grandTotalNum.toDouble();
 
       AnalyticsService.instance.logPurchase(
         transactionId: orderId.toString(),
-        value: totalAmount,
+        value: payableAmount,
         items: purchasedItems
             .map((c) => AnalyticsService.instance.item(
                   itemId: c.item.id,
@@ -586,7 +614,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         final bkashRepo = ref.read(bkashRepositoryProvider);
         final bkashResult = await bkashRepo.initiatePayment(
           orderId: orderId,
-          amount: totalAmount,
+          amount: payableAmount,
         );
 
         if (mounted) {

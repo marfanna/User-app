@@ -13,6 +13,13 @@ import '../../features/onboarding/enter_name/view/enter_name_screen.dart';
 import '../../features/onboarding/select_area/view/select_area_screen.dart';
 import '../../features/explore/view/explore_screen.dart';
 import '../../features/home/view/restaurants_home_screen.dart';
+import '../../features/medicine_home/view/medicine_home_screen.dart';
+import '../../features/medicine_home/view/medicine_categories_screen.dart';
+import '../../features/medicine_home/view/medicine_product_detail_screen.dart';
+import '../../features/medicine_home/view/pharmacy_storefront_screen.dart';
+import '../../features/medicine_home/view/medicine_listing_screen.dart';
+import '../../features/medicine_home/models/medicine_product_args.dart';
+import '../../features/medicine_home/models/medicine_listing_args.dart';
 import '../../features/restaurant_detail/models/restaurant_api_models.dart';
 import '../../features/restaurant_detail/view/restaurant_detail_screen.dart';
 import '../../features/restaurant_detail/view/restaurant_reviews_screen.dart';
@@ -36,6 +43,7 @@ import '../../features/search/view/search_screen.dart';
 import '../../features/favourites/view/favourites_screen.dart';
 import '../../features/orders/view/dispute_screen.dart';
 import '../../features/orders/view/dispute_list_screen.dart';
+import '../../features/rewards/view/my_rewards_screen.dart';
 
 import '../widgets/app_startup/startup_widget.dart';
 import '../widgets/bottom_navigation_bar.dart';
@@ -115,6 +123,41 @@ GoRouter goRouter(Ref ref) {
         pageBuilder: (context, state) {
           final id = state.pathParameters['id']!;
           return NoTransitionPage(child: TrackOrderScreen(orderId: id));
+        },
+      ),
+      // Medicine home itself lives inside the bottom-nav shell (see
+      // shell_routes.dart). These are the full-screen detail pages, mirroring
+      // how restaurant detail / add-food sit outside the shell.
+      GoRoute(
+        path: Routes.medicineCategories,
+        name: Routes.medicineCategories,
+        pageBuilder: (context, state) =>
+            const MaterialPage(child: MedicineCategoriesScreen()),
+      ),
+      GoRoute(
+        path: Routes.medicineProduct,
+        name: Routes.medicineProduct,
+        pageBuilder: (context, state) {
+          final args = state.extra as MedicineProductArgs;
+          return MaterialPage(child: MedicineProductDetailScreen(args: args));
+        },
+      ),
+      GoRoute(
+        path: Routes.medicineListing,
+        name: Routes.medicineListing,
+        pageBuilder: (context, state) {
+          final args = state.extra as MedicineListingArgs;
+          return MaterialPage(child: MedicineListingScreen(args: args));
+        },
+      ),
+      GoRoute(
+        path: Routes.pharmacy,
+        name: Routes.pharmacy,
+        pageBuilder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return NoTransitionPage(
+            child: PharmacyStorefrontScreen(shopId: id),
+          );
         },
       ),
       GoRoute(
@@ -218,6 +261,12 @@ GoRouter goRouter(Ref ref) {
         name: Routes.disputes,
         pageBuilder: (context, state) =>
             const MaterialPage(child: DisputeListScreen()),
+      ),
+      GoRoute(
+        path: Routes.myRewards,
+        name: Routes.myRewards,
+        pageBuilder: (context, state) =>
+            const MaterialPage(child: MyRewardsScreen()),
       ),
       GoRoute(
         path: Routes.bkashPayment,

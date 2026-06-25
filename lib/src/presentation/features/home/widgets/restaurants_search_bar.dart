@@ -26,7 +26,7 @@ class RestaurantsSearchBar extends StatelessWidget {
           Gap(10),
           Expanded(
             child: Text(
-              'Search Restaurants..',
+              'Search shops & products..',
               style: TextStyle(
                 fontFamily: 'Manrope',
                 fontWeight: FontWeight.w500,

@@ -30,6 +30,10 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
         orderId: orderId,
         orderNumber: orderNumber,
         status: status,
+        shopName: data['shopName'] as String?,
+        etaText: data['eta'] as String?,
+        riderName: data['riderName'] as String?,
+        riderPhone: data['riderPhone'] as String?,
       );
     }
   }

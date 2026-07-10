@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 
@@ -53,17 +54,14 @@ class FoodGridTile extends StatelessWidget {
                     top: Radius.circular(14),
                   ),
                   child: item.imageUrl.isNotEmpty
-                      ? Image.network(
-                          item.imageUrl,
+                      ? CachedNetworkImage(
+                          imageUrl: item.imageUrl,
                           height: 120,
                           width: double.infinity,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, _, _) =>
+                          placeholder: (_, _) => const _ImagePlaceholder(),
+                          errorWidget: (_, _, _) =>
                               const _ImagePlaceholder(),
-                          loadingBuilder: (_, child, progress) =>
-                              progress == null
-                                  ? child
-                                  : const _ImagePlaceholder(),
                         )
                       : const _ImagePlaceholder(),
                 ),

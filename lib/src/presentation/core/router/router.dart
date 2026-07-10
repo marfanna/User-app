@@ -239,8 +239,13 @@ GoRouter goRouter(Ref ref) {
       GoRoute(
         path: Routes.search,
         name: Routes.search,
-        pageBuilder: (context, state) =>
-            const MaterialPage(child: SearchScreen()),
+        pageBuilder: (context, state) {
+          final vertical =
+              state.uri.queryParameters['vertical'] == 'medicine'
+              ? SearchVertical.medicine
+              : SearchVertical.restaurant;
+          return MaterialPage(child: SearchScreen(vertical: vertical));
+        },
       ),
       GoRoute(
         path: Routes.favourites,

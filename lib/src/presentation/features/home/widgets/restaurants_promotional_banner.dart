@@ -1,22 +1,26 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class RestaurantsPromotionalBanner extends StatefulWidget {
+import '../riverpod/hero_banner_provider.dart';
+
+class RestaurantsPromotionalBanner extends ConsumerStatefulWidget {
   const RestaurantsPromotionalBanner({super.key});
 
   @override
-  State<RestaurantsPromotionalBanner> createState() =>
+  ConsumerState<RestaurantsPromotionalBanner> createState() =>
       _RestaurantsPromotionalBannerState();
 }
 
 class _RestaurantsPromotionalBannerState
-    extends State<RestaurantsPromotionalBanner> {
+    extends ConsumerState<RestaurantsPromotionalBanner> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
+  int _imageCount = 0;
   Timer? _autoPlayTimer;
 
-  // Same images as the webapp BannerCarousel (mockBanners)
-  final List<String> _bannerImages = [
+  // Fallback imagery used until the franchise has restaurant/general banners.
+  final List<String> _fallbackImages = [
     'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1200&h=400&fit=crop',
     'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=1200&h=400&fit=crop',
     'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=1200&h=400&fit=crop',
@@ -30,8 +34,8 @@ class _RestaurantsPromotionalBannerState
 
   void _startAutoPlay() {
     _autoPlayTimer = Timer.periodic(const Duration(seconds: 5), (_) {
-      if (!mounted) return;
-      final nextPage = (_currentPage + 1) % _bannerImages.length;
+      if (!mounted || _imageCount <= 1) return;
+      final nextPage = (_currentPage + 1) % _imageCount;
       _pageController.animateToPage(
         nextPage,
         duration: const Duration(milliseconds: 500),
@@ -49,6 +53,10 @@ class _RestaurantsPromotionalBannerState
 
   @override
   Widget build(BuildContext context) {
+    final remote = ref.watch(heroBannerProvider('restaurant')).value ?? [];
+    final images = remote.isNotEmpty ? remote : _fallbackImages;
+    _imageCount = images.length;
+
     return SizedBox(
       width: double.infinity,
       height: 160,
@@ -59,7 +67,7 @@ class _RestaurantsPromotionalBannerState
             borderRadius: BorderRadius.circular(12),
             child: PageView.builder(
               controller: _pageController,
-              itemCount: _bannerImages.length,
+              itemCount: images.length,
               onPageChanged: (index) {
                 setState(() {
                   _currentPage = index;
@@ -67,7 +75,7 @@ class _RestaurantsPromotionalBannerState
               },
               itemBuilder: (context, index) {
                 return Image.network(
-                  _bannerImages[index],
+                  images[index],
                   width: double.infinity,
                   height: double.infinity,
                   fit: BoxFit.cover, // equivalent to object-cover
@@ -102,7 +110,7 @@ class _RestaurantsPromotionalBannerState
             right: 0,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(_bannerImages.length, (index) {
+              children: List.generate(images.length, (index) {
                 final isActive = _currentPage == index;
                 return AnimatedContainer(
                   duration: const Duration(milliseconds: 300),

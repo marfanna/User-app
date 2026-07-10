@@ -10,6 +10,12 @@ import '../../../../core/di/dependency_injection.dart';
 import '../../../core/router/routes.dart';
 import '../../home/models/shop_data.dart';
 import '../../home/riverpod/restaurants_provider.dart';
+import '../../medicine_home/riverpod/medicine_pharmacies_provider.dart';
+
+/// Which catalog the shared search screen queries. Search is vertical-scoped:
+/// restaurants search food + restaurants, medicine searches medicines +
+/// pharmacies. The launching screen picks the mode.
+enum SearchVertical { restaurant, medicine }
 
 // ── Product search result ──────────────────────────────────────────────────
 
@@ -48,7 +54,9 @@ class _ProductResult {
 // ── Screen ─────────────────────────────────────────────────────────────────
 
 class SearchScreen extends ConsumerStatefulWidget {
-  const SearchScreen({super.key});
+  const SearchScreen({super.key, this.vertical = SearchVertical.restaurant});
+
+  final SearchVertical vertical;
 
   @override
   ConsumerState<SearchScreen> createState() => _SearchScreenState();
@@ -60,6 +68,17 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   List<_ProductResult> _products = [];
   bool _loadingProducts = false;
   Timer? _debounce;
+
+  bool get _isMedicine => widget.vertical == SearchVertical.medicine;
+
+  // Product-search endpoint for the active vertical.
+  String get _searchEndpoint =>
+      _isMedicine ? 'medicine-products/public/search' : 'menu/public/search';
+
+  // Destination for a tapped shop or product (pharmacy vs restaurant page).
+  String _shopRoute(String shopId) => _isMedicine
+      ? Routes.pharmacyPath(shopId)
+      : Routes.restaurantDetailPath(shopId);
 
   @override
   void dispose() {
@@ -102,7 +121,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     try {
       final dio = ref.read(dioProvider);
       final response = await dio.get(
-        'menu/public/search',
+        _searchEndpoint,
         queryParameters: {'q': q, 'franchiseId': franchiseId, 'limit': '20'},
       );
       final body = response.data;
@@ -139,7 +158,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final shopsAsync = ref.watch(restaurantsProvider);
+    final shopsAsync = _isMedicine
+        ? ref.watch(medicinePharmaciesProvider)
+        : ref.watch(restaurantsProvider);
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -162,7 +183,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             color: Color(0xFF040707),
           ),
           decoration: InputDecoration(
-            hintText: 'Search shops & products..',
+            hintText: _isMedicine
+                ? 'Search medicines & pharmacies..'
+                : 'Search shops & products..',
             hintStyle: const TextStyle(
               fontFamily: 'Manrope',
               fontWeight: FontWeight.w500,
@@ -226,9 +249,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                     padding: const EdgeInsets.only(bottom: 12),
                     child: _SearchResultTile(
                       shop: s,
-                      onTap: () => context.push(
-                        Routes.restaurantDetailPath(s.id),
-                      ),
+                      onTap: () => context.push(_shopRoute(s.id)),
                     ),
                   ),
                 ),
@@ -254,9 +275,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                       padding: const EdgeInsets.only(bottom: 12),
                       child: _ProductResultTile(
                         product: p,
-                        onTap: () => context.push(
-                          Routes.restaurantDetailPath(p.shopId),
-                        ),
+                        onTap: () => context.push(_shopRoute(p.shopId)),
                       ),
                     ),
                   )),

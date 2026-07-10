@@ -10,7 +10,6 @@ import '../widgets/restaurants_search_bar.dart';
 import '../widgets/restaurants_promotional_banner.dart';
 import '../widgets/restaurants_trending_list.dart';
 import '../widgets/restaurants_best_deals.dart';
-import '../widgets/restaurants_category_list.dart';
 import '../widgets/restaurants_all_list.dart';
 import '../widgets/restaurants_sponsored_card.dart';
 
@@ -86,8 +85,6 @@ class _RestaurantsHomeScreenState extends ConsumerState<RestaurantsHomeScreen> {
                 RestaurantsHomeHeader(),
                 Gap(24),
                 RestaurantsSearchBar(),
-                Gap(24),
-                RestaurantsCategoryList(),
                 Gap(24),
                 RestaurantsPromotionalBanner(),
                 Gap(24),

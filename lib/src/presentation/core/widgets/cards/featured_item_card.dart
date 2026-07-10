@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 
@@ -40,12 +41,13 @@ class FeaturedItemCard extends StatelessWidget {
                     top: Radius.circular(14),
                   ),
                   child: item.imageUrl.isNotEmpty
-                      ? Image.network(
-                          item.imageUrl,
+                      ? CachedNetworkImage(
+                          imageUrl: item.imageUrl,
                           height: 155,
                           width: double.infinity,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, _, _) => _placeholder(),
+                          placeholder: (_, _) => _placeholder(),
+                          errorWidget: (_, _, _) => _placeholder(),
                         )
                       : _placeholder(),
                 ),

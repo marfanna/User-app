@@ -1,8 +1,9 @@
+import 'dart:async';
 import 'dart:io' show Platform;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-// import 'package:flutter_svg/flutter_svg.dart'; // re-enable with bKash option
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 
@@ -209,31 +210,30 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
               ),
             ),
           ),
-          // bKash option hidden for now — uncomment to re-enable.
-          // const Gap(10),
-          // _buildPaymentOption(
-          //   method: _PaymentMethod.bkash,
-          //   child: Row(
-          //     mainAxisSize: MainAxisSize.min,
-          //     children: [
-          //       const Text(
-          //         'bKash',
-          //         style: TextStyle(
-          //           fontFamily: 'Poppins',
-          //           fontWeight: FontWeight.w500,
-          //           fontSize: 16,
-          //           color: Colors.black,
-          //         ),
-          //       ),
-          //       const Gap(8),
-          //       SvgPicture.asset(
-          //         'assets/icons/bkash.svg',
-          //         width: 28,
-          //         height: 24,
-          //       ),
-          //     ],
-          //   ),
-          // ),
+          const Gap(10),
+          _buildPaymentOption(
+            method: _PaymentMethod.bkash,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'bKash',
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontWeight: FontWeight.w500,
+                    fontSize: 16,
+                    color: Colors.black,
+                  ),
+                ),
+                const Gap(8),
+                SvgPicture.asset(
+                  'assets/icons/bkash.svg',
+                  width: 28,
+                  height: 24,
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -596,18 +596,21 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
           : totalAmount;
       final double payableAmount = grandTotalNum.toDouble();
 
-      AnalyticsService.instance.logPurchase(
-        transactionId: orderId.toString(),
-        value: payableAmount,
-        items: purchasedItems
-            .map((c) => AnalyticsService.instance.item(
-                  itemId: c.item.id,
-                  itemName: c.item.name,
-                  price: c.selectedVariant?.price ?? c.item.price,
-                  quantity: c.quantity,
-                  category: c.shopName,
-                ))
-            .toList(),
+      // Fire-and-forget: analytics must not block or fail the checkout flow.
+      unawaited(
+        AnalyticsService.instance.logPurchase(
+          transactionId: orderId.toString(),
+          value: payableAmount,
+          items: purchasedItems
+              .map((c) => AnalyticsService.instance.item(
+                    itemId: c.item.id,
+                    itemName: c.item.name,
+                    price: c.selectedVariant?.price ?? c.item.price,
+                    quantity: c.quantity,
+                    category: c.shopName,
+                  ))
+              .toList(),
+        ),
       );
 
       if (_selectedPayment == _PaymentMethod.bkash) {

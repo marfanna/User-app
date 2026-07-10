@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/router/routes.dart';
 import '../../../core/theme/theme.dart';
+import '../../home/widgets/category_switcher.dart';
 import '../../cart/riverpod/cart_provider.dart';
 import '../../notifications/riverpod/notifications_provider.dart';
 
@@ -26,14 +27,8 @@ class _MedicineHomeHeaderState extends ConsumerState<MedicineHomeHeader> {
     );
   }
 
-  void _switchCategory() {
-    if (context.canPop()) context.pop();
-  }
-
   @override
   Widget build(BuildContext context) {
-    final colors = context.color;
-    final text = context.textStyle;
     final dims = context.dimensions;
 
     final cartCount = ref
@@ -50,35 +45,7 @@ class _MedicineHomeHeaderState extends ConsumerState<MedicineHomeHeader> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          GestureDetector(
-            onTap: _switchCategory,
-            behavior: HitTestBehavior.opaque,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Category',
-                  style: text.bodySmallCompact.copyWith(
-                    color: colors.text.primary,
-                  ),
-                ),
-                Gap(dims.spacing.s6),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text('Medicine', style: text.displaySmall),
-                    Gap(dims.spacing.s4),
-                    Icon(
-                      Icons.expand_more,
-                      color: colors.icon.primary,
-                      size: dims.size.s24,
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
+          const CategorySwitcher(currentRoute: Routes.medicine),
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [

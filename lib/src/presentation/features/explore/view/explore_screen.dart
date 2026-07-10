@@ -7,38 +7,49 @@ import '../../../core/router/routes.dart';
 import '../../../core/theme/theme.dart';
 import '../../../core/widgets/rounded_back_button.dart';
 
+/// Single source of truth for the Explore category grid.
+/// A category is "active" (navigable) when it has a non-null [route].
+/// Coming-soon / unrouted entries are shown but not navigable.
+const List<CategoryItem> exploreCategories = [
+  CategoryItem(
+    title: 'Restaurants',
+    imagePath: 'assets/images/explore/restaurants.png',
+    route: Routes.restaurants,
+  ),
+  CategoryItem(
+    title: 'Cylinder',
+    imagePath: 'assets/images/explore/cylinder.png',
+  ),
+  CategoryItem(
+    title: 'Medicine',
+    imagePath: 'assets/images/explore/medicine.png',
+    route: Routes.medicine,
+  ),
+  CategoryItem(title: 'Mart', imagePath: 'assets/images/explore/mart.png'),
+  CategoryItem(
+    title: 'Laundry',
+    imagePath: 'assets/images/explore/laundry.png',
+  ),
+  CategoryItem(
+    title: 'Laundry',
+    imagePath: 'assets/images/explore/laundry.png',
+    isComingSoon: true,
+  ),
+];
+
+/// Routes of every active (navigable) category. Drives the "skip the picker
+/// when only one vertical is live" redirect on the home tab.
+List<String> get activeCategoryRoutes => exploreCategories
+    .where((c) => c.route != null)
+    .map((c) => c.route!)
+    .toList();
+
 class ExploreScreen extends StatelessWidget {
   const ExploreScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Categories list matching the Figma grid design
-    final categories = [
-      const _CategoryItem(
-        title: 'Restaurants',
-        imagePath: 'assets/images/explore/restaurants.png',
-        route: Routes.restaurants,
-      ),
-      const _CategoryItem(
-        title: 'Cylinder',
-        imagePath: 'assets/images/explore/cylinder.png',
-      ),
-      const _CategoryItem(
-        title: 'Medicine',
-        imagePath: 'assets/images/explore/medicine.png',
-        route: Routes.medicine,
-      ),
-      const _CategoryItem(title: 'Mart', imagePath: 'assets/images/explore/mart.png'),
-      const _CategoryItem(
-        title: 'Laundry',
-        imagePath: 'assets/images/explore/laundry.png',
-      ),
-      const _CategoryItem(
-        title: 'Laundry',
-        imagePath: 'assets/images/explore/laundry.png',
-        isComingSoon: true,
-      ),
-    ];
+    final categories = exploreCategories;
 
     return Scaffold(
       body: Container(
@@ -140,8 +151,8 @@ class ExploreScreen extends StatelessWidget {
   }
 }
 
-class _CategoryItem {
-  const _CategoryItem({
+class CategoryItem {
+  const CategoryItem({
     required this.title,
     required this.imagePath,
     this.route,
@@ -157,7 +168,7 @@ class _CategoryItem {
 class _CategoryCard extends StatelessWidget {
   const _CategoryCard({required this.item});
 
-  final _CategoryItem item;
+  final CategoryItem item;
 
   @override
   Widget build(BuildContext context) {

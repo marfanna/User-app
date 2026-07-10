@@ -1,27 +1,31 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/theme.dart';
+import '../../home/riverpod/hero_banner_provider.dart';
 
 /// Auto-playing promotional banner carousel for medicine offers.
 ///
-/// Placeholder pharmacy imagery for now; swap [_bannerImages] for a banners
-/// provider when the offers endpoint is wired.
-class MedicinePromotionalBanner extends StatefulWidget {
+/// Pulls the franchise's `pharmacy` hero banners (general fallback applied
+/// server-side); uses placeholder imagery until banners exist.
+class MedicinePromotionalBanner extends ConsumerStatefulWidget {
   const MedicinePromotionalBanner({super.key});
 
   @override
-  State<MedicinePromotionalBanner> createState() =>
+  ConsumerState<MedicinePromotionalBanner> createState() =>
       _MedicinePromotionalBannerState();
 }
 
-class _MedicinePromotionalBannerState extends State<MedicinePromotionalBanner> {
+class _MedicinePromotionalBannerState
+    extends ConsumerState<MedicinePromotionalBanner> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
+  int _imageCount = 0;
   Timer? _autoPlayTimer;
 
-  final List<String> _bannerImages = [
+  final List<String> _fallbackImages = [
     'https://images.unsplash.com/photo-1576602976047-174e57a47881?w=1200&h=400&fit=crop',
     'https://images.unsplash.com/photo-1587854692152-cbe660dbde88?w=1200&h=400&fit=crop',
     'https://images.unsplash.com/photo-1471864190281-a93a3070b6de?w=1200&h=400&fit=crop',
@@ -35,8 +39,8 @@ class _MedicinePromotionalBannerState extends State<MedicinePromotionalBanner> {
 
   void _startAutoPlay() {
     _autoPlayTimer = Timer.periodic(const Duration(seconds: 5), (_) {
-      if (!mounted) return;
-      final nextPage = (_currentPage + 1) % _bannerImages.length;
+      if (!mounted || _imageCount <= 1) return;
+      final nextPage = (_currentPage + 1) % _imageCount;
       _pageController.animateToPage(
         nextPage,
         duration: const Duration(milliseconds: 500),
@@ -57,6 +61,10 @@ class _MedicinePromotionalBannerState extends State<MedicinePromotionalBanner> {
     final colors = context.color;
     final dims = context.dimensions;
 
+    final remote = ref.watch(heroBannerProvider('pharmacy')).value ?? [];
+    final images = remote.isNotEmpty ? remote : _fallbackImages;
+    _imageCount = images.length;
+
     return SizedBox(
       width: double.infinity,
       height: 160,
@@ -66,12 +74,12 @@ class _MedicinePromotionalBannerState extends State<MedicinePromotionalBanner> {
             borderRadius: BorderRadius.circular(dims.radius.r12),
             child: PageView.builder(
               controller: _pageController,
-              itemCount: _bannerImages.length,
+              itemCount: images.length,
               onPageChanged: (index) =>
                   setState(() => _currentPage = index),
               itemBuilder: (context, index) {
                 return Image.network(
-                  _bannerImages[index],
+                  images[index],
                   width: double.infinity,
                   height: double.infinity,
                   fit: BoxFit.cover,
@@ -106,7 +114,7 @@ class _MedicinePromotionalBannerState extends State<MedicinePromotionalBanner> {
             right: 0,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(_bannerImages.length, (index) {
+              children: List.generate(images.length, (index) {
                 final isActive = _currentPage == index;
                 return AnimatedContainer(
                   duration: const Duration(milliseconds: 300),

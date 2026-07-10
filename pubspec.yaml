@@ -2,7 +2,7 @@ name: duare_user
 description: "Duare User App"
 publish_to: 'none'
 
-version: 2.4.3+18
+version: 2.4.3+21
 
 environment:
   sdk: ^3.10.3
@@ -15,6 +15,7 @@ dependencies:
   gap: ^3.0.1
   google_fonts: ^8.0.0
   pinput: ^6.0.1
+  smart_auth: ^1.1.0
   toastification: ^3.0.3
   shimmer: ^3.0.0
   url_launcher: ^6.3.2
@@ -29,6 +30,9 @@ dependencies:
   freezed_annotation: ^3.1.0
   # Media
   flutter_svg: ^2.0.10+1
+  cached_network_image: ^3.4.1
+  # Lists
+  scrollable_positioned_list: ^0.3.8
   # Logging
   logger: ^2.4.0
   pretty_dio_logger: ^1.4.0

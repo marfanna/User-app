@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pinput/pinput.dart';
+import 'package:smart_auth/smart_auth.dart';
 
+import '../../../../../core/utils/sms_retriever_impl.dart';
 import '../../../../../core/extensions/app_localization.dart';
 import '../../../../core/router/routes.dart';
 import '../../../../core/theme/theme.dart';
@@ -29,10 +31,13 @@ class OTPVerificationPage extends ConsumerStatefulWidget {
 
 class _OTPVerificationPageState extends ConsumerState<OTPVerificationPage> {
   final _controller = TextEditingController();
+  late final SmsRetrieverImpl _smsRetriever;
 
   @override
   void initState() {
     super.initState();
+
+    _smsRetriever = SmsRetrieverImpl(SmartAuth());
 
     ref.listenManual(verifyOtpProvider, (_, next) {
       if (next.value == true) {
@@ -81,7 +86,11 @@ class _OTPVerificationPageState extends ConsumerState<OTPVerificationPage> {
                 Gap(context.dimensions.spacing.s8),
                 BodyText.medium(context.locale.otpSentMessage),
                 Gap(context.dimensions.spacing.s32),
-                _OTPInputField(controller: _controller),
+                _OTPInputField(
+                  controller: _controller,
+                  smsRetriever: _smsRetriever,
+                  onCompleted: (_) => _submit(),
+                ),
                 Gap(context.dimensions.spacing.s32),
                 PrimaryButton.comfortable(
                   onPressed: state.isLoading ? null : _submit,

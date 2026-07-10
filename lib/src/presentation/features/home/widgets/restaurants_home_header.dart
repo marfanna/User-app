@@ -4,6 +4,7 @@ import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/router/routes.dart';
+import 'category_switcher.dart';
 import '../../cart/riverpod/cart_provider.dart';
 import '../../notifications/riverpod/notifications_provider.dart';
 
@@ -40,43 +41,8 @@ class _RestaurantsHomeHeaderState extends ConsumerState<RestaurantsHomeHeader> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Text block
-          const Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Category',
-                style: TextStyle(
-                  fontFamily: 'Manrope',
-                  fontWeight: FontWeight.w500,
-                  fontSize: 14,
-                  height: 1.28,
-                  letterSpacing: -1,
-                  color: Color(0xFF040707),
-                ),
-              ),
-              Gap(6),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Text(
-                    'Restaurants',
-                    style: TextStyle(
-                      fontFamily: 'Manrope',
-                      fontWeight: FontWeight.w700,
-                      fontSize: 24,
-                      height: 1.28,
-                      letterSpacing: -1,
-                      color: Color(0xFF040707),
-                    ),
-                  ),
-                  Gap(4),
-                  Icon(Icons.expand_more, color: Color(0xFF1C1B1F), size: 24),
-                ],
-              ),
-            ],
-          ),
+          // Vertical switcher (Category label + current vertical + dropdown)
+          const CategorySwitcher(currentRoute: Routes.restaurants),
 
           Row(
             mainAxisSize: MainAxisSize.min,

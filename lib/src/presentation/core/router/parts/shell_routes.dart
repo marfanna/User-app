@@ -11,6 +11,12 @@ StatefulShellRoute _shellRoutes(Ref ref) {
           GoRoute(
             path: Routes.home,
             name: Routes.home,
+            // Skip the category picker when only one vertical is live: land
+            // straight on it. With 2+ active, show the Explore grid.
+            redirect: (context, state) {
+              final active = activeCategoryRoutes;
+              return active.length == 1 ? active.first : null;
+            },
             pageBuilder: (context, state) {
               return const NoTransitionPage(child: ExploreScreen());
             },

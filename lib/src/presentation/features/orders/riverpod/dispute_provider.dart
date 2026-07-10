@@ -147,6 +147,17 @@ class DisputeNotifier extends _$DisputeNotifier {
 // ── Ticket model ─────────────────────────────────────────────────────────────
 
 class DisputeTicket {
+  const DisputeTicket({
+    required this.id,
+    required this.category,
+    required this.description,
+    required this.status,
+    required this.createdAt,
+    this.orderId,
+    this.shopName,
+    this.resolutionType,
+    this.resolutionNotes,
+  });
 
   factory DisputeTicket.fromJson(Map<String, dynamic> json) {
     final orderRaw = json['orderId'];
@@ -167,17 +178,6 @@ class DisputeTicket {
       resolutionNotes: resolution?['notes'] as String?,
     );
   }
-  const DisputeTicket({
-    required this.id,
-    required this.category,
-    required this.description,
-    required this.status,
-    required this.createdAt,
-    this.orderId,
-    this.shopName,
-    this.resolutionType,
-    this.resolutionNotes,
-  });
 
   final String id;
   final String category;

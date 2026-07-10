@@ -17,7 +17,7 @@ class MedicineSearchBar extends StatelessWidget {
     final dims = context.dimensions;
 
     return GestureDetector(
-      onTap: () => context.push(Routes.search),
+      onTap: () => context.push('${Routes.search}?vertical=medicine'),
       child: Container(
         width: double.infinity,
         height: dims.size.s48,

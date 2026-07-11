@@ -11,6 +11,7 @@ enum CacheKey {
   language,
   selectedFranchiseId,
   selectedFranchiseName,
+  winnersPopupMonth,
 }
 
 abstract class CacheService {

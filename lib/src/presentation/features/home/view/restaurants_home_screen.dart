@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 
+import '../../../../core/di/dependency_injection.dart';
+import '../../../../data/services/cache/cache_service.dart';
+import '../../leaderboard/riverpod/monthly_winners_provider.dart';
+import '../../leaderboard/widgets/monthly_winners_dialog.dart';
 import '../../orders/models/customer_order_model.dart';
 import '../../orders/riverpod/order_review_provider.dart';
 import '../../orders/view/order_review_dialog.dart';
@@ -23,6 +27,7 @@ class RestaurantsHomeScreen extends ConsumerStatefulWidget {
 
 class _RestaurantsHomeScreenState extends ConsumerState<RestaurantsHomeScreen> {
   bool _reviewDialogShown = false;
+  bool _winnersChecked = false;
 
   @override
   void initState() {
@@ -30,6 +35,36 @@ class _RestaurantsHomeScreenState extends ConsumerState<RestaurantsHomeScreen> {
     Future.microtask(
       () => ref.read(orderReviewProvider.notifier).initialize(),
     );
+    Future.microtask(_maybeShowWinners);
+  }
+
+  // Current month in Bangladesh time (GMT+6) as "YYYY-MM".
+  String _dhakaMonthKey() {
+    final d = DateTime.now().toUtc().add(const Duration(hours: 6));
+    return '${d.year}-${d.month.toString().padLeft(2, '0')}';
+  }
+
+  // Show the monthly winners popup once per calendar month, on first home open.
+  Future<void> _maybeShowWinners() async {
+    if (_winnersChecked) return;
+    _winnersChecked = true;
+
+    final cache = ref.read(cacheServiceProvider);
+    final thisMonth = _dhakaMonthKey();
+    if (cache.get<String>(CacheKey.winnersPopupMonth) == thisMonth) return;
+
+    final data = await ref.read(monthlyWinnersProvider.future);
+    if (data == null || !mounted) return;
+
+    await cache.save(CacheKey.winnersPopupMonth, thisMonth);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        showDialog<void>(
+          context: context,
+          builder: (_) => MonthlyWinnersDialog(data: data),
+        );
+      }
+    });
   }
 
   void _showReviewDialog(CustomerOrderModel order) {

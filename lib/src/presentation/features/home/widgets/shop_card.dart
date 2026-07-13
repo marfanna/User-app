@@ -37,6 +37,9 @@ class ShopCard extends ConsumerWidget {
     }
 
     final prepTime = shop.estimatedPrepTime ?? 30;
+    final timeText = shop.isHomemade
+        ? 'Next-day delivery'
+        : '$prepTime–${prepTime + 15} min';
 
     return GestureDetector(
       onTap: onTap,
@@ -126,7 +129,7 @@ class ShopCard extends ConsumerWidget {
                       ),
                       const Gap(4),
                       Text(
-                        '$prepTime–${prepTime + 15} min',
+                        timeText,
                         style: const TextStyle(
                           fontFamily: 'Manrope',
                           fontWeight: FontWeight.w400,
@@ -189,6 +192,27 @@ class _ShopBannerImage extends StatelessWidget {
             height: height,
           ),
         ),
+        if (shop.isHomemade)
+          Positioned(
+            top: 8,
+            left: 8,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: const Color(0xFF036FFD),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Text(
+                'Next-Day',
+                style: TextStyle(
+                  fontFamily: 'Manrope',
+                  fontWeight: FontWeight.w700,
+                  fontSize: 11,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
         if (!shop.isOpen)
           Positioned.fill(
             child: _ClosedOverlay(

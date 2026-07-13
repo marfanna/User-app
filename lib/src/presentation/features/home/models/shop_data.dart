@@ -15,6 +15,7 @@ class ShopData {
     this.extraDeliveryCharge,
     this.latitude,
     this.longitude,
+    this.deliveryMode = 'instant',
   });
 
   factory ShopData.fromJson(Map<String, dynamic> json) {
@@ -64,6 +65,7 @@ class ShopData {
           (json['extraDeliveryCharge'] as num?)?.toDouble(),
       latitude: lat,
       longitude: lng,
+      deliveryMode: json['deliveryMode'] as String? ?? 'instant',
     );
   }
 
@@ -81,6 +83,9 @@ class ShopData {
   final double? extraDeliveryCharge;
   final double? latitude;
   final double? longitude;
+  final String deliveryMode;
+
+  bool get isHomemade => deliveryMode == 'scheduled';
 
   static bool _calcIsOpen(List<Map<String, dynamic>>? hours) {
     if (hours == null || hours.isEmpty) return true;

@@ -12,7 +12,7 @@ import '../../orders/view/order_review_dialog.dart';
 import '../widgets/restaurants_home_header.dart';
 import '../widgets/restaurants_search_bar.dart';
 import '../widgets/restaurants_promotional_banner.dart';
-import '../widgets/restaurants_trending_list.dart';
+import '../widgets/restaurants_dark_horse_list.dart';
 import '../widgets/restaurants_homemade_list.dart';
 import '../widgets/restaurants_best_deals.dart';
 import '../widgets/restaurants_all_list.dart';
@@ -126,7 +126,7 @@ class _RestaurantsHomeScreenState extends ConsumerState<RestaurantsHomeScreen> {
                 Gap(24),
                 RestaurantsBestDeals(),
                 Gap(24),
-                RestaurantsTrendingList(),
+                RestaurantsDarkHorseList(),
                 Gap(24),
                 RestaurantsHomemadeList(),
                 Gap(24),

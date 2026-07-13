@@ -92,10 +92,10 @@ class MedicineProductDetail {
 
   String? get image => images.isNotEmpty ? images.first : null;
 
-  // Treat medicines as orderable unless stock is explicitly 0. The
-  // `isAvailable` flag is intentionally NOT gated here — current seed data
-  // marks everything unavailable, and the owner wants those shown + orderable.
-  bool get inStock => stock == null || stock! > 0;
+  // Duare doesn't hold inventory — a rider buys from the pharmacy per order,
+  // so neither `isAvailable` nor `stock` (both unreliable bulk-import data,
+  // not real-time counts) should block ordering. Always orderable.
+  bool get inStock => true;
 
   bool get hasDiscount => mrp != null && mrp! > price;
 

@@ -10,6 +10,7 @@ import '../../../../core/di/dependency_injection.dart';
 import '../../../core/router/routes.dart';
 import '../../home/models/shop_data.dart';
 import '../../home/riverpod/restaurants_provider.dart';
+import '../../medicine_home/models/medicine_product_args.dart';
 import '../../medicine_home/riverpod/medicine_pharmacies_provider.dart';
 
 /// Which catalog the shared search screen queries. Search is vertical-scoped:
@@ -79,6 +80,26 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   String _shopRoute(String shopId) => _isMedicine
       ? Routes.pharmacyPath(shopId)
       : Routes.restaurantDetailPath(shopId);
+
+  // Medicines have their own detail page; restaurant search results open
+  // the shop's menu instead (there's no standalone menu-item page).
+  void _openProduct(_ProductResult p) {
+    if (_isMedicine) {
+      context.push(
+        Routes.medicineProductPath(p.id),
+        extra: MedicineProductArgs(
+          productId: p.id,
+          shopId: p.shopId,
+          shopName: p.shopName,
+          name: p.name,
+          image: p.image,
+          price: p.price,
+        ),
+      );
+    } else {
+      context.push(_shopRoute(p.shopId));
+    }
+  }
 
   @override
   void dispose() {
@@ -275,7 +296,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                       padding: const EdgeInsets.only(bottom: 12),
                       child: _ProductResultTile(
                         product: p,
-                        onTap: () => context.push(_shopRoute(p.shopId)),
+                        onTap: () => _openProduct(p),
                       ),
                     ),
                   )),

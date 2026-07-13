@@ -11,7 +11,9 @@ import '../../../core/router/routes.dart';
 import '../../cart/riverpod/cart_provider.dart';
 import '../models/medicine_product_args.dart';
 import '../models/medicine_product_detail.dart';
+import '../riverpod/medicine_alternatives_provider.dart';
 import '../riverpod/medicine_product_detail_provider.dart';
+import '../widgets/medicine_product_strip.dart';
 
 /// Medicine product detail page. Loads the full product by id, shows specs +
 /// medical info, and adds to cart with a quantity stepper.
@@ -291,9 +293,27 @@ class _Details extends StatelessWidget {
           Gap(dims.spacing.s12),
           _MedicalCard(info: product.medicalInfo),
         ],
+        if (product.genericName != null &&
+            product.genericName!.isNotEmpty) ...[
+          Gap(dims.spacing.s24),
+          _AlternativesSection(productId: product.id),
+        ],
         Gap(dims.spacing.s16),
       ],
     );
+  }
+}
+
+/// Same-generic, different-brand alternatives for this product, if any.
+class _AlternativesSection extends ConsumerWidget {
+  const _AlternativesSection({required this.productId});
+
+  final String productId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final async = ref.watch(medicineAlternativesProvider(productId));
+    return MedicineProductStrip(title: 'Alternative Brands', async: async);
   }
 }
 

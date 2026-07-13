@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/router/routes.dart';
 import '../riverpod/homemade_shops_provider.dart';
+import 'restaurant_strip_skeleton.dart';
 import 'shop_card.dart';
 
 /// Horizontal strip for "Homemade / Cloud Kitchen" restaurants — cooked to
@@ -18,7 +19,7 @@ class RestaurantsHomemadeList extends ConsumerWidget {
     final async = ref.watch(homemadeShopsProvider);
 
     return async.when(
-      loading: () => const SizedBox.shrink(),
+      loading: () => const RestaurantStripSkeleton(titleWidth: 140),
       error: (_, _) => const SizedBox.shrink(),
       data: (shops) {
         if (shops.isEmpty) return const SizedBox.shrink();

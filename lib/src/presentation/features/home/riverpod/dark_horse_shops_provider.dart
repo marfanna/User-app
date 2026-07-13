@@ -48,6 +48,8 @@ final darkHorseShopsProvider = FutureProvider.autoDispose<List<ShopData>>((
   return list
       .whereType<Map<String, dynamic>>()
       .map(ShopData.fromJson)
-      .where((s) => s.name.isNotEmpty)
+      // A shop with zero orders isn't "topping the charts" — exclude it
+      // rather than let a plain new-but-unordered shop fill the section.
+      .where((s) => s.name.isNotEmpty && s.totalOrders > 0)
       .toList();
 });

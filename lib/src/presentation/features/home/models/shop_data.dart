@@ -16,6 +16,7 @@ class ShopData {
     this.latitude,
     this.longitude,
     this.deliveryMode = 'instant',
+    this.totalOrders = 0,
   });
 
   factory ShopData.fromJson(Map<String, dynamic> json) {
@@ -66,6 +67,7 @@ class ShopData {
       latitude: lat,
       longitude: lng,
       deliveryMode: json['deliveryMode'] as String? ?? 'instant',
+      totalOrders: (analytics?['totalOrders'] as num?)?.toInt() ?? 0,
     );
   }
 
@@ -84,6 +86,7 @@ class ShopData {
   final double? latitude;
   final double? longitude;
   final String deliveryMode;
+  final int totalOrders;
 
   bool get isHomemade => deliveryMode == 'scheduled';
 

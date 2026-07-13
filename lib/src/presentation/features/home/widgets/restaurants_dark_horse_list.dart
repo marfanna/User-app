@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/router/routes.dart';
 import '../riverpod/dark_horse_shops_provider.dart';
+import 'restaurant_strip_skeleton.dart';
 import 'shop_card.dart';
 
 /// Horizontal strip for "Dark Horse" restaurants — new joiners already
@@ -17,7 +18,7 @@ class RestaurantsDarkHorseList extends ConsumerWidget {
     final async = ref.watch(darkHorseShopsProvider);
 
     return async.when(
-      loading: () => const SizedBox.shrink(),
+      loading: () => const RestaurantStripSkeleton(titleWidth: 110),
       error: (_, _) => const SizedBox.shrink(),
       data: (shops) {
         if (shops.isEmpty) return const SizedBox.shrink();

@@ -46,7 +46,7 @@ class _ProfileTabScreenState extends ConsumerState<ProfileTabScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const DuareAppBar(title: 'Account'),
+              const DuareAppBar(title: 'Account', showBackButton: false),
               Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.symmetric(horizontal: 16),

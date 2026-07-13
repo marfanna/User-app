@@ -9,11 +9,16 @@ class DuareAppBar extends StatelessWidget {
     required this.title,
     this.trailing,
     this.onBackPressed,
+    this.showBackButton = true,
   });
 
   final String title;
   final Widget? trailing;
   final VoidCallback? onBackPressed;
+
+  /// Set to false on bottom-tab root screens (Profile, etc.) — there's
+  /// nothing to pop back to there, so the button would be a dead tap.
+  final bool showBackButton;
 
   @override
   Widget build(BuildContext context) {
@@ -25,14 +30,16 @@ class DuareAppBar extends StatelessWidget {
           Expanded(
             child: Row(
               children: [
-                RoundedBackButton.primary(
-                  onPressed:
-                      onBackPressed ??
-                      () {
-                        if (context.canPop()) context.pop();
-                      },
-                ),
-                const Gap(16),
+                if (showBackButton) ...[
+                  RoundedBackButton.primary(
+                    onPressed:
+                        onBackPressed ??
+                        () {
+                          if (context.canPop()) context.pop();
+                        },
+                  ),
+                  const Gap(16),
+                ],
                 Expanded(
                   child: Text(
                     title,

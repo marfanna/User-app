@@ -20,7 +20,10 @@ class MedicineProductStrip extends StatelessWidget {
   final String title;
   final AsyncValue<List<FeaturedItem>> async;
 
-  static const double stripHeight = 250;
+  // Was 250 — MedicineProductCard's content (image + name + shop + price row)
+  // overflowed the bottom by ~7px at default text scale. Bumped with buffer
+  // for larger accessibility text-scale settings too.
+  static const double stripHeight = 268;
 
   @override
   Widget build(BuildContext context) {

@@ -13,11 +13,16 @@ class MedicineSectionHeader extends StatelessWidget {
     required this.title,
     this.onSeeAll,
     this.seeAllLabel = 'See all',
+    this.leadingIcon,
   });
 
   final String title;
   final VoidCallback? onSeeAll;
   final String seeAllLabel;
+
+  /// Optional icon badge before the title — used to give a specific section
+  /// (e.g. Mart's Meat & Fish) a distinct visual identity beyond ordering.
+  final IconData? leadingIcon;
 
   @override
   Widget build(BuildContext context) {
@@ -29,6 +34,22 @@ class MedicineSectionHeader extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
+        if (leadingIcon != null) ...[
+          Container(
+            width: dims.size.s32,
+            height: dims.size.s32,
+            decoration: BoxDecoration(
+              color: colors.brand.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(dims.radius.r10),
+            ),
+            child: Icon(
+              leadingIcon,
+              size: dims.size.s18,
+              color: colors.brand.primary,
+            ),
+          ),
+          Gap(dims.spacing.s8),
+        ],
         Expanded(
           child: Text(
             title,

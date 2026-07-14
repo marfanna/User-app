@@ -63,7 +63,9 @@ final martProductsProvider = FutureProvider.autoDispose<List<MartCatalogItem>>(
   },
 );
 
-bool _isMeatCategory(String c) {
+/// Shared with [MartCategorySection] so the meat/fish sort here and the
+/// meat/fish visual framing there stay in sync off one definition.
+bool isMeatCategory(String c) {
   final v = c.toLowerCase();
   return v.contains('meat') || v.contains('fish');
 }
@@ -88,8 +90,8 @@ final martCategoriesProvider = FutureProvider.autoDispose<List<String>>((
   }
   out.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
 
-  final meat = out.where(_isMeatCategory).toList();
-  final rest = out.where((c) => !_isMeatCategory(c)).toList();
+  final meat = out.where(isMeatCategory).toList();
+  final rest = out.where((c) => !isMeatCategory(c)).toList();
   return [...meat, ...rest];
 });
 

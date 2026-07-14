@@ -41,10 +41,6 @@ class _MedicinePromotionalBannerState
       'https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=1200&h=400&fit=crop',
       'https://images.unsplash.com/photo-1542838386-8f3f6c7f9e6f?w=1200&h=400&fit=crop',
     ],
-    'restaurant': [
-      'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1200&h=400&fit=crop',
-      'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1200&h=400&fit=crop',
-    ],
   };
 
   List<String> get _fallbackImages =>

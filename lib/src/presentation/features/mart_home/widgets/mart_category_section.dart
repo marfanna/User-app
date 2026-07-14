@@ -24,18 +24,21 @@ class MartCategorySection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final dims = context.dimensions;
+    final colors = context.color;
     final async = ref.watch(martCategoryPreviewProvider(category));
+    final isMeat = isMeatCategory(category);
 
     return async.when(
       loading: () => _Skeleton(category: category),
       error: (_, _) => const SizedBox.shrink(),
       data: (items) {
         if (items.isEmpty) return const SizedBox.shrink();
-        return Column(
+        final section = Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             MedicineSectionHeader(
               title: category,
+              leadingIcon: isMeat ? Icons.set_meal_outlined : null,
               onSeeAll: () => context.push(
                 Routes.martListing,
                 extra: MartListingArgs(categoryLabel: category),
@@ -56,6 +59,22 @@ class MartCategorySection extends ConsumerWidget {
               ),
             ),
           ],
+        );
+
+        // Meat & Fish gets dedicated framing (stated business focus), not
+        // just front-of-list ordering — a tinted, rounded container the
+        // other categories don't have.
+        if (!isMeat) return section;
+        return Container(
+          padding: EdgeInsets.all(dims.padding.p12),
+          decoration: BoxDecoration(
+            color: colors.brand.primary.withValues(alpha: 0.04),
+            borderRadius: BorderRadius.circular(dims.radius.r16),
+            border: Border.all(
+              color: colors.brand.primary.withValues(alpha: 0.15),
+            ),
+          ),
+          child: section,
         );
       },
     );

@@ -9,10 +9,14 @@ import '../../home/widgets/category_switcher.dart';
 import '../../cart/riverpod/cart_provider.dart';
 import '../../notifications/riverpod/notifications_provider.dart';
 
-/// Medicine homepage header: category label + name (tap to switch vertical),
+/// Category homepage header: category label + name (tap to switch vertical),
 /// notification bell, and cart button — both with unread/count badges.
+/// Shared by every vertical home (Medicine, Mart, ...) — only [currentRoute]
+/// changes which entry the [CategorySwitcher] highlights.
 class MedicineHomeHeader extends ConsumerStatefulWidget {
-  const MedicineHomeHeader({super.key});
+  const MedicineHomeHeader({super.key, this.currentRoute = Routes.medicine});
+
+  final String currentRoute;
 
   @override
   ConsumerState<MedicineHomeHeader> createState() => _MedicineHomeHeaderState();
@@ -45,7 +49,7 @@ class _MedicineHomeHeaderState extends ConsumerState<MedicineHomeHeader> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const CategorySwitcher(currentRoute: Routes.medicine),
+          CategorySwitcher(currentRoute: widget.currentRoute),
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [

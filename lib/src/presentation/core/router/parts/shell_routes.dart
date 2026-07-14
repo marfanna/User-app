@@ -35,6 +35,13 @@ StatefulShellRoute _shellRoutes(Ref ref) {
               return const NoTransitionPage(child: MedicineHomeScreen());
             },
           ),
+          GoRoute(
+            path: Routes.mart,
+            name: Routes.mart,
+            pageBuilder: (context, state) {
+              return const NoTransitionPage(child: MartHomeScreen());
+            },
+          ),
         ],
       ),
       StatefulShellBranch(

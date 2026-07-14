@@ -14,9 +14,13 @@ import '../models/medicine_product_args.dart';
 /// dimensions (card/image size) are intentional literals — no design token
 /// exists for them, matching the rider/order card convention.
 class MedicineProductCard extends StatelessWidget {
-  const MedicineProductCard({super.key, required this.item});
+  const MedicineProductCard({super.key, required this.item, this.onTap});
 
   final FeaturedItem item;
+
+  /// Override the default medicine-product-detail navigation — used by other
+  /// verticals (e.g. Mart) reusing this card inside [MedicineProductStrip].
+  final VoidCallback? onTap;
 
   static const double cardWidth = 240;
   static const double imageWidth = 220;
@@ -43,7 +47,7 @@ class MedicineProductCard extends StatelessWidget {
     final text = context.textStyle;
 
     return GestureDetector(
-      onTap: () => _openProduct(context),
+      onTap: onTap ?? () => _openProduct(context),
       child: Container(
         width: cardWidth,
         padding: EdgeInsets.all(dims.padding.p10),
@@ -101,7 +105,7 @@ class MedicineProductCard extends StatelessWidget {
                           ),
                         ),
                       ),
-                      _AddButton(onTap: () => _openProduct(context)),
+                      _AddButton(onTap: onTap ?? () => _openProduct(context)),
                     ],
                   ),
                 ],

@@ -1,35 +1,52 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../core/router/routes.dart';
 import '../../../core/theme/theme.dart';
 import '../../../core/widgets/gradient_background.dart';
-import '../riverpod/medicine_categories_provider.dart';
-import '../riverpod/medicine_pharmacies_provider.dart';
-import '../riverpod/pharmacy_reorder_provider.dart';
-import '../widgets/medicine_best_selling_strip.dart';
-import '../widgets/medicine_category_section.dart';
-import '../widgets/medicine_featured_strip.dart';
-import '../widgets/medicine_home_header.dart';
-import '../widgets/medicine_nearby_pharmacies.dart';
-import '../widgets/medicine_promotional_banner.dart';
-import '../widgets/medicine_reorder_strip.dart';
-import '../widgets/medicine_search_bar.dart';
+import '../../home/models/featured_item.dart';
+import '../../medicine_home/widgets/medicine_home_header.dart';
+import '../../medicine_home/widgets/medicine_nearby_pharmacies.dart';
+import '../../medicine_home/widgets/medicine_product_strip.dart';
+import '../../medicine_home/widgets/medicine_promotional_banner.dart';
+import '../../medicine_home/widgets/medicine_reorder_strip.dart';
+import '../../medicine_home/widgets/medicine_search_bar.dart';
+import '../models/mart_product_args.dart';
+import '../riverpod/mart_featured_provider.dart';
+import '../riverpod/mart_products_provider.dart';
+import '../riverpod/mart_reorder_provider.dart';
+import '../riverpod/mart_shops_provider.dart';
+import '../widgets/mart_category_section.dart';
 
-/// Medicine (pharmacy) category homepage.
+/// Mart category homepage.
 ///
-/// Top: Header → Search → Order Again → Featured → Best Selling → Banner. Then
-/// every real medicine category renders as its own horizontal "section by
-/// section" strip (6 products + See all), built lazily as you scroll so a large
-/// catalogue doesn't hammer the API at once. Nearby Pharmacies sits at the very
-/// bottom.
-class MedicineHomeScreen extends ConsumerWidget {
-  const MedicineHomeScreen({super.key});
+/// Mirrors the Medicine homepage structure exactly (see ui-registry.md):
+/// Header → Search → Order Again → Featured → Best Selling → Banner, then
+/// every real `itemCategory` as its own lazy strip ("Fish & Meat" pinned
+/// first — the stated business focus), then Nearby Shops at the bottom.
+class MartHomeScreen extends ConsumerWidget {
+  const MartHomeScreen({super.key});
+
+  static void _openProduct(BuildContext context, FeaturedItem item) {
+    context.push(
+      Routes.martProduct,
+      extra: MartProductArgs(
+        productId: item.item.id,
+        shopId: item.shopId.isNotEmpty ? item.shopId : item.shop.id,
+        shopName: item.shop.name,
+        name: item.item.name,
+        price: item.item.price.toDouble(),
+        image: item.item.image,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final dims = context.dimensions;
-    final categoriesAsync = ref.watch(medicineAggregatedCategoriesProvider);
+    final categoriesAsync = ref.watch(martCategoriesProvider);
 
     return Scaffold(
       body: GradientBackground(
@@ -44,16 +61,28 @@ class MedicineHomeScreen extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Gap(dims.spacing.s16),
-                      const MedicineHomeHeader(),
+                      const MedicineHomeHeader(currentRoute: Routes.mart),
                       Gap(dims.spacing.s24),
-                      const MedicineSearchBar(),
-                      MedicineReorderStrip(
-                        ordersAsync: ref.watch(pharmacyReorderProvider),
+                      const MedicineSearchBar(
+                        vertical: 'mart',
+                        hintText: 'Search mart shops..',
                       ),
-                      const MedicineFeaturedStrip(),
-                      const MedicineBestSellingStrip(),
+                      MedicineReorderStrip(
+                        icon: Icons.shopping_basket_outlined,
+                        ordersAsync: ref.watch(martReorderProvider),
+                      ),
+                      MedicineProductStrip(
+                        title: 'Featured',
+                        async: ref.watch(martFeaturedProvider),
+                        onItemTap: (item) => _openProduct(context, item),
+                      ),
+                      MedicineProductStrip(
+                        title: 'Best Selling',
+                        async: ref.watch(martBestSellingProvider),
+                        onItemTap: (item) => _openProduct(context, item),
+                      ),
                       Gap(dims.spacing.s24),
-                      const MedicinePromotionalBanner(),
+                      const MedicinePromotionalBanner(bannerCategory: 'mart'),
                       Gap(dims.spacing.s24),
                     ],
                   ),
@@ -69,7 +98,9 @@ class MedicineHomeScreen extends ConsumerWidget {
                 ),
                 sliver: SliverToBoxAdapter(
                   child: MedicineNearbyPharmacies(
-                    shopsAsync: ref.watch(medicinePharmaciesProvider),
+                    title: 'Nearby Shops',
+                    shopsAsync: ref.watch(martShopsProvider),
+                    routeBuilder: Routes.martShopPath,
                   ),
                 ),
               ),
@@ -107,7 +138,7 @@ class MedicineHomeScreen extends ConsumerWidget {
             itemCount: categories.length,
             separatorBuilder: (_, _) => Gap(dims.spacing.s24),
             itemBuilder: (_, i) =>
-                MedicineCategorySection(category: categories[i]),
+                MartCategorySection(category: categories[i]),
           ),
         );
       },

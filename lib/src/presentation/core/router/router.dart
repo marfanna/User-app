@@ -20,6 +20,12 @@ import '../../features/medicine_home/view/pharmacy_storefront_screen.dart';
 import '../../features/medicine_home/view/medicine_listing_screen.dart';
 import '../../features/medicine_home/models/medicine_product_args.dart';
 import '../../features/medicine_home/models/medicine_listing_args.dart';
+import '../../features/mart_home/view/mart_home_screen.dart';
+import '../../features/mart_home/view/mart_storefront_screen.dart';
+import '../../features/mart_home/view/mart_listing_screen.dart';
+import '../../features/mart_home/view/mart_product_detail_screen.dart';
+import '../../features/mart_home/models/mart_product_args.dart';
+import '../../features/mart_home/models/mart_listing_args.dart';
 import '../../features/restaurant_detail/models/restaurant_api_models.dart';
 import '../../features/restaurant_detail/view/restaurant_detail_screen.dart';
 import '../../features/restaurant_detail/view/restaurant_reviews_screen.dart';
@@ -161,6 +167,30 @@ GoRouter goRouter(Ref ref) {
         },
       ),
       GoRoute(
+        path: Routes.martProduct,
+        name: Routes.martProduct,
+        pageBuilder: (context, state) {
+          final args = state.extra as MartProductArgs?;
+          return MaterialPage(child: MartProductDetailScreen(args: args));
+        },
+      ),
+      GoRoute(
+        path: Routes.martListing,
+        name: Routes.martListing,
+        pageBuilder: (context, state) {
+          final args = state.extra as MartListingArgs;
+          return MaterialPage(child: MartListingScreen(args: args));
+        },
+      ),
+      GoRoute(
+        path: Routes.martShop,
+        name: Routes.martShop,
+        pageBuilder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return NoTransitionPage(child: MartStorefrontScreen(shopId: id));
+        },
+      ),
+      GoRoute(
         path: Routes.restaurantDetail,
         name: Routes.restaurantDetail,
         pageBuilder: (context, state) {
@@ -240,10 +270,12 @@ GoRouter goRouter(Ref ref) {
         path: Routes.search,
         name: Routes.search,
         pageBuilder: (context, state) {
-          final vertical =
-              state.uri.queryParameters['vertical'] == 'medicine'
-              ? SearchVertical.medicine
-              : SearchVertical.restaurant;
+          final verticalParam = state.uri.queryParameters['vertical'];
+          final vertical = switch (verticalParam) {
+            'medicine' => SearchVertical.medicine,
+            'mart' => SearchVertical.mart,
+            _ => SearchVertical.restaurant,
+          };
           return MaterialPage(child: SearchScreen(vertical: vertical));
         },
       ),

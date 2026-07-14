@@ -6,20 +6,30 @@ import 'package:go_router/go_router.dart';
 import '../../../core/router/routes.dart';
 import '../../../core/theme/theme.dart';
 import '../../home/models/shop_data.dart';
-import '../riverpod/medicine_pharmacies_provider.dart';
 import 'medicine_section_header.dart';
 
 /// "Nearby Pharmacies" horizontal shop strip. Tokenized port of the restaurant
-/// trending strip, scoped to franchise pharmacy shops.
+/// trending strip, scoped to franchise pharmacy shops. Shared by other
+/// verticals (e.g. Mart) — caller watches its own shops provider and passes
+/// the result in via [shopsAsync], matching `MedicineProductStrip`'s pattern.
 class MedicineNearbyPharmacies extends ConsumerWidget {
-  const MedicineNearbyPharmacies({super.key});
+  const MedicineNearbyPharmacies({
+    super.key,
+    required this.shopsAsync,
+    this.title = 'Nearby Pharmacies',
+    this.routeBuilder = Routes.pharmacyPath,
+  });
+
+  final AsyncValue<List<ShopData>> shopsAsync;
+  final String title;
+  final String Function(String shopId) routeBuilder;
 
   static const double stripHeight = 229;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final dims = context.dimensions;
-    final async = ref.watch(medicinePharmaciesProvider);
+    final async = shopsAsync;
 
     return async.when(
       loading: () => const _Skeleton(stripHeight: stripHeight),
@@ -30,7 +40,7 @@ class MedicineNearbyPharmacies extends ConsumerWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const MedicineSectionHeader(title: 'Nearby Pharmacies'),
+            MedicineSectionHeader(title: title),
             Gap(dims.spacing.s16),
             SizedBox(
               height: stripHeight,
@@ -41,7 +51,7 @@ class MedicineNearbyPharmacies extends ConsumerWidget {
                 separatorBuilder: (_, _) => Gap(dims.spacing.s16),
                 itemBuilder: (_, i) => _PharmacyCard(
                   shop: nearby[i],
-                  onTap: () => context.push(Routes.pharmacyPath(nearby[i].id)),
+                  onTap: () => context.push(routeBuilder(nearby[i].id)),
                 ),
               ),
             ),

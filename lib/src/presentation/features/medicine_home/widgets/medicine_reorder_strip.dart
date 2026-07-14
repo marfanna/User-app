@@ -6,51 +6,67 @@ import 'package:go_router/go_router.dart';
 import '../../../core/router/routes.dart';
 import '../../../core/theme/theme.dart';
 import '../../orders/models/customer_order_model.dart';
-import '../riverpod/pharmacy_reorder_provider.dart';
 import 'medicine_section_header.dart';
 
-/// "Order Again" strip — recent pharmacy orders for quick reorder.
+/// "Order Again" strip — recent orders for quick reorder. Shared by verticals
+/// (Medicine, Mart, ...) — caller watches its own reorder provider and passes
+/// the result in via [ordersAsync], matching `MedicineProductStrip`'s pattern.
 ///
 /// Tapping a card opens the order detail screen, where the existing reorder
 /// flow re-adds the items to the cart. Auto-hides when there are no past
-/// pharmacy orders.
-class MedicineReorderStrip extends ConsumerWidget {
-  const MedicineReorderStrip({super.key});
+/// orders for the vertical.
+class MedicineReorderStrip extends StatelessWidget {
+  const MedicineReorderStrip({
+    super.key,
+    required this.ordersAsync,
+    this.title = 'Order Again',
+    this.icon = Icons.medication_outlined,
+  });
+
+  final AsyncValue<List<CustomerOrderModel>> ordersAsync;
+  final String title;
+  final IconData icon;
 
   static const double stripHeight = 96;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final dims = context.dimensions;
-    final async = ref.watch(pharmacyReorderProvider);
+    final async = ordersAsync;
 
     return async.maybeWhen(
       orElse: () => const SizedBox.shrink(),
       data: (orders) {
         if (orders.isEmpty) return const SizedBox.shrink();
         final recent = orders.take(8).toList();
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const MedicineSectionHeader(title: 'Order Again'),
-            Gap(dims.spacing.s16),
-            SizedBox(
-              height: stripHeight,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                clipBehavior: Clip.none,
-                itemCount: recent.length,
-                separatorBuilder: (_, _) => Gap(dims.spacing.s12),
-                itemBuilder: (_, i) => _ReorderCard(
-                  order: recent[i],
-                  onTap: () => context.pushNamed(
-                    Routes.orderDetails,
-                    pathParameters: {'id': recent[i].id},
+        // Leading gap lives here, not in the parent Column, so a collapsed
+        // (empty) strip contributes zero space instead of a dead fixed gap.
+        return Padding(
+          padding: EdgeInsets.only(top: dims.spacing.s24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              MedicineSectionHeader(title: title),
+              Gap(dims.spacing.s16),
+              SizedBox(
+                height: stripHeight,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  clipBehavior: Clip.none,
+                  itemCount: recent.length,
+                  separatorBuilder: (_, _) => Gap(dims.spacing.s12),
+                  itemBuilder: (_, i) => _ReorderCard(
+                    order: recent[i],
+                    icon: icon,
+                    onTap: () => context.pushNamed(
+                      Routes.orderDetails,
+                      pathParameters: {'id': recent[i].id},
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         );
       },
     );
@@ -58,9 +74,14 @@ class MedicineReorderStrip extends ConsumerWidget {
 }
 
 class _ReorderCard extends StatelessWidget {
-  const _ReorderCard({required this.order, required this.onTap});
+  const _ReorderCard({
+    required this.order,
+    required this.icon,
+    required this.onTap,
+  });
 
   final CustomerOrderModel order;
+  final IconData icon;
   final VoidCallback onTap;
 
   static const double cardWidth = 260;
@@ -96,11 +117,7 @@ class _ReorderCard extends StatelessWidget {
                 color: colors.brand.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(dims.radius.r10),
               ),
-              child: Icon(
-                Icons.medication_outlined,
-                color: colors.brand.primary,
-                size: dims.size.s24,
-              ),
+              child: Icon(icon, color: colors.brand.primary, size: dims.size.s24),
             ),
             Gap(dims.spacing.s12),
             Expanded(

@@ -18,6 +18,11 @@ class Routes {
 
   // Other pages
   static const String restaurants = '/restaurants';
+  static const String mart = '/mart';
+  static const String martShop = '/mart-shop/:id';
+  static String martShopPath(String id) => '/mart-shop/$id';
+  static const String martListing = '/mart/listing';
+  static const String martProduct = '/mart/product';
   static const String medicine = '/medicine';
   static const String medicineCategories = '/medicine/categories';
   static const String medicineProduct = '/medicine/product/:id';

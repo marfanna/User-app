@@ -25,7 +25,11 @@ const List<CategoryItem> exploreCategories = [
     imagePath: 'assets/images/explore/medicine.png',
     route: Routes.medicine,
   ),
-  CategoryItem(title: 'Mart', imagePath: 'assets/images/explore/mart.png'),
+  CategoryItem(
+    title: 'Mart',
+    imagePath: 'assets/images/explore/mart.png',
+    route: Routes.mart,
+  ),
   CategoryItem(
     title: 'Laundry',
     imagePath: 'assets/images/explore/laundry.png',

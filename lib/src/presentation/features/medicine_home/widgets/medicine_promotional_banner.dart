@@ -6,12 +6,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/theme.dart';
 import '../../home/riverpod/hero_banner_provider.dart';
 
-/// Auto-playing promotional banner carousel for medicine offers.
+/// Auto-playing promotional banner carousel for a category vertical.
 ///
-/// Pulls the franchise's `pharmacy` hero banners (general fallback applied
-/// server-side); uses placeholder imagery until banners exist.
+/// Pulls the franchise's [bannerCategory] hero banners (general fallback
+/// applied server-side); uses placeholder imagery until banners exist.
 class MedicinePromotionalBanner extends ConsumerStatefulWidget {
-  const MedicinePromotionalBanner({super.key});
+  const MedicinePromotionalBanner({
+    super.key,
+    this.bannerCategory = 'pharmacy',
+  });
+
+  final String bannerCategory;
 
   @override
   ConsumerState<MedicinePromotionalBanner> createState() =>
@@ -25,11 +30,26 @@ class _MedicinePromotionalBannerState
   int _imageCount = 0;
   Timer? _autoPlayTimer;
 
-  final List<String> _fallbackImages = [
-    'https://images.unsplash.com/photo-1576602976047-174e57a47881?w=1200&h=400&fit=crop',
-    'https://images.unsplash.com/photo-1587854692152-cbe660dbde88?w=1200&h=400&fit=crop',
-    'https://images.unsplash.com/photo-1471864190281-a93a3070b6de?w=1200&h=400&fit=crop',
-  ];
+  static const Map<String, List<String>> _fallbackImagesByCategory = {
+    'pharmacy': [
+      'https://images.unsplash.com/photo-1576602976047-174e57a47881?w=1200&h=400&fit=crop',
+      'https://images.unsplash.com/photo-1587854692152-cbe660dbde88?w=1200&h=400&fit=crop',
+      'https://images.unsplash.com/photo-1471864190281-a93a3070b6de?w=1200&h=400&fit=crop',
+    ],
+    'mart': [
+      'https://images.unsplash.com/photo-1542838132-92c53300491e?w=1200&h=400&fit=crop',
+      'https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=1200&h=400&fit=crop',
+      'https://images.unsplash.com/photo-1542838386-8f3f6c7f9e6f?w=1200&h=400&fit=crop',
+    ],
+    'restaurant': [
+      'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1200&h=400&fit=crop',
+      'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1200&h=400&fit=crop',
+    ],
+  };
+
+  List<String> get _fallbackImages =>
+      _fallbackImagesByCategory[widget.bannerCategory] ??
+      _fallbackImagesByCategory['pharmacy']!;
 
   @override
   void initState() {
@@ -61,7 +81,8 @@ class _MedicinePromotionalBannerState
     final colors = context.color;
     final dims = context.dimensions;
 
-    final remote = ref.watch(heroBannerProvider('pharmacy')).value ?? [];
+    final remote =
+        ref.watch(heroBannerProvider(widget.bannerCategory)).value ?? [];
     final images = remote.isNotEmpty ? remote : _fallbackImages;
     _imageCount = images.length;
 

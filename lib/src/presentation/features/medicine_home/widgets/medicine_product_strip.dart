@@ -15,10 +15,15 @@ class MedicineProductStrip extends StatelessWidget {
     super.key,
     required this.title,
     required this.async,
+    this.onItemTap,
   });
 
   final String title;
   final AsyncValue<List<FeaturedItem>> async;
+
+  /// Override the default medicine-product-detail navigation per item —
+  /// used by other verticals (e.g. Mart) reusing this strip.
+  final void Function(FeaturedItem item)? onItemTap;
 
   // Was 250 — MedicineProductCard's content (image + name + shop + price row)
   // overflowed the bottom by ~7px at default text scale. Bumped with buffer
@@ -27,28 +32,43 @@ class MedicineProductStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final dims = context.dimensions;
+
+    // Leading gap lives here (not in the parent Column) so a collapsed
+    // (empty/error) strip contributes zero space instead of leaving a dead
+    // fixed gap behind it — see mart hero-banner gap fix.
     return async.when(
-      loading: () => _StripSkeleton(title: title),
+      loading: () => Padding(
+        padding: EdgeInsets.only(top: dims.spacing.s24),
+        child: _StripSkeleton(title: title),
+      ),
       error: (_, _) => const SizedBox.shrink(),
       data: (items) {
         if (items.isEmpty) return const SizedBox.shrink();
-        final dims = context.dimensions;
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            MedicineSectionHeader(title: title),
-            Gap(dims.spacing.s16),
-            SizedBox(
-              height: stripHeight,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                clipBehavior: Clip.none,
-                itemCount: items.length,
-                separatorBuilder: (_, _) => Gap(dims.spacing.s16),
-                itemBuilder: (_, i) => MedicineProductCard(item: items[i]),
+        return Padding(
+          padding: EdgeInsets.only(top: dims.spacing.s24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              MedicineSectionHeader(title: title),
+              Gap(dims.spacing.s16),
+              SizedBox(
+                height: stripHeight,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  clipBehavior: Clip.none,
+                  itemCount: items.length,
+                  separatorBuilder: (_, _) => Gap(dims.spacing.s16),
+                  itemBuilder: (_, i) => MedicineProductCard(
+                    item: items[i],
+                    onTap: onItemTap == null
+                        ? null
+                        : () => onItemTap!(items[i]),
+                  ),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         );
       },
     );

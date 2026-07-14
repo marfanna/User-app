@@ -5,10 +5,17 @@ import 'package:go_router/go_router.dart';
 import '../../../core/router/routes.dart';
 import '../../../core/theme/theme.dart';
 
-/// Tap-to-search field for the medicine homepage. Routes to the shared search
-/// screen, matching the restaurant home pattern.
+/// Tap-to-search field for a category homepage. Routes to the shared search
+/// screen, matching the restaurant home pattern. Shared by Medicine, Mart...
 class MedicineSearchBar extends StatelessWidget {
-  const MedicineSearchBar({super.key});
+  const MedicineSearchBar({
+    super.key,
+    this.vertical = 'medicine',
+    this.hintText = 'Search medicines & pharmacies..',
+  });
+
+  final String vertical;
+  final String hintText;
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +24,7 @@ class MedicineSearchBar extends StatelessWidget {
     final dims = context.dimensions;
 
     return GestureDetector(
-      onTap: () => context.push('${Routes.search}?vertical=medicine'),
+      onTap: () => context.push('${Routes.search}?vertical=$vertical'),
       child: Container(
         width: double.infinity,
         height: dims.size.s48,
@@ -47,7 +54,7 @@ class MedicineSearchBar extends StatelessWidget {
             Gap(dims.spacing.s10),
             Expanded(
               child: Text(
-                'Search medicines & pharmacies..',
+                hintText,
                 style: text.bodySmallCompactLoose.copyWith(
                   color: colors.text.secondary,
                 ),

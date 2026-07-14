@@ -4,6 +4,7 @@ import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/theme.dart';
+import '../../../core/widgets/add_to_cart_animation.dart';
 import '../../../core/widgets/button/button.dart';
 import '../../../core/widgets/rounded_back_button.dart';
 import '../../../core/widgets/toast.dart';
@@ -13,6 +14,7 @@ import '../models/medicine_product_args.dart';
 import '../models/medicine_product_detail.dart';
 import '../riverpod/medicine_alternatives_provider.dart';
 import '../riverpod/medicine_product_detail_provider.dart';
+import '../widgets/medicine_cart_fab.dart';
 import '../widgets/medicine_product_strip.dart';
 
 /// Medicine product detail page. Loads the full product by id, shows specs +
@@ -30,6 +32,7 @@ class MedicineProductDetailScreen extends ConsumerStatefulWidget {
 class _MedicineProductDetailScreenState
     extends ConsumerState<MedicineProductDetailScreen> {
   int _quantity = 1;
+  final _cartFabKey = GlobalKey();
 
   void _addToCart(MedicineProductDetail product) {
     ref.read(cartProvider.notifier).addItem(
@@ -41,6 +44,14 @@ class _MedicineProductDetailScreenState
           quantity: _quantity,
           selectedChoices: const {},
         );
+    final screenSize = MediaQuery.of(context).size;
+    runAddToCartAnimation(
+      context: context,
+      cartKey: _cartFabKey,
+      startCenter: Offset(screenSize.width / 2, screenSize.height * 0.18),
+      image: product.image,
+      fallbackIcon: Icons.medication_outlined,
+    );
     Toast.success(context, 'Added $_quantity to cart');
   }
 
@@ -56,57 +67,42 @@ class _MedicineProductDetailScreenState
       body: async.when(
         loading: () => _LoadingView(args: widget.args),
         error: (_, _) => _ErrorView(),
-        data: (product) => _LoadedView(
+        data: (product) => _LoadedView(product: product),
+      ),
+      bottomNavigationBar: async.maybeWhen(
+        data: (product) => _BottomBar(
           product: product,
           quantity: _quantity,
           onQuantity: (q) => setState(() => _quantity = q),
           onAdd: () => _addToCart(product),
         ),
+        orElse: () => null,
       ),
+      floatingActionButton: MedicineCartFab(key: _cartFabKey),
     );
   }
 }
 
 class _LoadedView extends StatelessWidget {
-  const _LoadedView({
-    required this.product,
-    required this.quantity,
-    required this.onQuantity,
-    required this.onAdd,
-  });
+  const _LoadedView({required this.product});
 
   final MedicineProductDetail product;
-  final int quantity;
-  final ValueChanged<int> onQuantity;
-  final VoidCallback onAdd;
 
   @override
   Widget build(BuildContext context) {
     final dims = context.dimensions;
 
-    return Column(
-      children: [
-        Expanded(
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _ImageHeader(image: product.image),
-                Padding(
-                  padding: EdgeInsets.all(dims.padding.p16),
-                  child: _Details(product: product),
-                ),
-              ],
-            ),
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _ImageHeader(image: product.image),
+          Padding(
+            padding: EdgeInsets.all(dims.padding.p16),
+            child: _Details(product: product),
           ),
-        ),
-        _BottomBar(
-          product: product,
-          quantity: quantity,
-          onQuantity: onQuantity,
-          onAdd: onAdd,
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

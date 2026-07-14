@@ -10,13 +10,15 @@ import '../../../../core/di/dependency_injection.dart';
 import '../../../core/router/routes.dart';
 import '../../home/models/shop_data.dart';
 import '../../home/riverpod/restaurants_provider.dart';
+import '../../mart_home/riverpod/mart_shops_provider.dart';
 import '../../medicine_home/models/medicine_product_args.dart';
 import '../../medicine_home/riverpod/medicine_pharmacies_provider.dart';
 
 /// Which catalog the shared search screen queries. Search is vertical-scoped:
 /// restaurants search food + restaurants, medicine searches medicines +
-/// pharmacies. The launching screen picks the mode.
-enum SearchVertical { restaurant, medicine }
+/// pharmacies, mart searches shops only (no product-search endpoint exists
+/// for `Product`). The launching screen picks the mode.
+enum SearchVertical { restaurant, medicine, mart }
 
 // ── Product search result ──────────────────────────────────────────────────
 
@@ -71,15 +73,22 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   Timer? _debounce;
 
   bool get _isMedicine => widget.vertical == SearchVertical.medicine;
+  bool get _isMart => widget.vertical == SearchVertical.mart;
 
-  // Product-search endpoint for the active vertical.
-  String get _searchEndpoint =>
-      _isMedicine ? 'medicine-products/public/search' : 'menu/public/search';
+  // Product-search endpoint for the active vertical. Null = shops-only (no
+  // product-search endpoint exists for `Product`, unlike menu/medicine).
+  String? get _searchEndpoint {
+    if (_isMedicine) return 'medicine-products/public/search';
+    if (_isMart) return null;
+    return 'menu/public/search';
+  }
 
-  // Destination for a tapped shop or product (pharmacy vs restaurant page).
-  String _shopRoute(String shopId) => _isMedicine
-      ? Routes.pharmacyPath(shopId)
-      : Routes.restaurantDetailPath(shopId);
+  // Destination for a tapped shop or product (pharmacy/mart/restaurant page).
+  String _shopRoute(String shopId) {
+    if (_isMedicine) return Routes.pharmacyPath(shopId);
+    if (_isMart) return Routes.martShopPath(shopId);
+    return Routes.restaurantDetailPath(shopId);
+  }
 
   // Medicines have their own detail page; restaurant search results open
   // the shop's menu instead (there's no standalone menu-item page).
@@ -134,6 +143,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   }
 
   Future<void> _searchProducts(String q) async {
+    final endpoint = _searchEndpoint;
+    if (endpoint == null) return; // mart: shops-only, no product endpoint
+
     final cache = ref.read(cacheServiceProvider);
     final franchiseId = cache.get<String>(CacheKey.selectedFranchiseId);
     if (franchiseId == null || franchiseId.isEmpty) return;
@@ -142,7 +154,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     try {
       final dio = ref.read(dioProvider);
       final response = await dio.get(
-        _searchEndpoint,
+        endpoint,
         queryParameters: {'q': q, 'franchiseId': franchiseId, 'limit': '20'},
       );
       final body = response.data;
@@ -181,6 +193,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   Widget build(BuildContext context) {
     final shopsAsync = _isMedicine
         ? ref.watch(medicinePharmaciesProvider)
+        : _isMart
+        ? ref.watch(martShopsProvider)
         : ref.watch(restaurantsProvider);
 
     return Scaffold(
@@ -206,6 +220,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           decoration: InputDecoration(
             hintText: _isMedicine
                 ? 'Search medicines & pharmacies..'
+                : _isMart
+                ? 'Search mart shops..'
                 : 'Search shops & products..',
             hintStyle: const TextStyle(
               fontFamily: 'Manrope',

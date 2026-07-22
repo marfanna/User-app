@@ -26,6 +26,12 @@ import '../../features/mart_home/view/mart_listing_screen.dart';
 import '../../features/mart_home/view/mart_product_detail_screen.dart';
 import '../../features/mart_home/models/mart_product_args.dart';
 import '../../features/mart_home/models/mart_listing_args.dart';
+import '../../features/fashion_home/view/fashion_home_screen.dart';
+import '../../features/fashion_home/view/fashion_storefront_screen.dart';
+import '../../features/fashion_home/view/fashion_listing_screen.dart';
+import '../../features/fashion_home/view/fashion_product_detail_screen.dart';
+import '../../features/fashion_home/models/fashion_product_args.dart';
+import '../../features/fashion_home/models/fashion_listing_args.dart';
 import '../../features/restaurant_detail/models/restaurant_api_models.dart';
 import '../../features/restaurant_detail/view/restaurant_detail_screen.dart';
 import '../../features/restaurant_detail/view/restaurant_reviews_screen.dart';
@@ -191,6 +197,30 @@ GoRouter goRouter(Ref ref) {
         },
       ),
       GoRoute(
+        path: Routes.fashionProduct,
+        name: Routes.fashionProduct,
+        pageBuilder: (context, state) {
+          final args = state.extra as FashionProductArgs?;
+          return MaterialPage(child: FashionProductDetailScreen(args: args));
+        },
+      ),
+      GoRoute(
+        path: Routes.fashionListing,
+        name: Routes.fashionListing,
+        pageBuilder: (context, state) {
+          final args = state.extra as FashionListingArgs;
+          return MaterialPage(child: FashionListingScreen(args: args));
+        },
+      ),
+      GoRoute(
+        path: Routes.fashionShop,
+        name: Routes.fashionShop,
+        pageBuilder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return NoTransitionPage(child: FashionStorefrontScreen(shopId: id));
+        },
+      ),
+      GoRoute(
         path: Routes.restaurantDetail,
         name: Routes.restaurantDetail,
         pageBuilder: (context, state) {
@@ -274,6 +304,7 @@ GoRouter goRouter(Ref ref) {
           final vertical = switch (verticalParam) {
             'medicine' => SearchVertical.medicine,
             'mart' => SearchVertical.mart,
+            'fashion' => SearchVertical.fashion,
             _ => SearchVertical.restaurant,
           };
           return MaterialPage(child: SearchScreen(vertical: vertical));

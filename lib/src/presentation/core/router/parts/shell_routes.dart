@@ -42,6 +42,13 @@ StatefulShellRoute _shellRoutes(Ref ref) {
               return const NoTransitionPage(child: MartHomeScreen());
             },
           ),
+          GoRoute(
+            path: Routes.fashion,
+            name: Routes.fashion,
+            pageBuilder: (context, state) {
+              return const NoTransitionPage(child: FashionHomeScreen());
+            },
+          ),
         ],
       ),
       StatefulShellBranch(

@@ -28,7 +28,12 @@ class CategorySwitcher extends StatelessWidget {
       (c) => c.route == currentRoute,
       orElse: () => active.isNotEmpty
           ? active.first
-          : const CategoryItem(title: 'Category', imagePath: ''),
+          : const CategoryItem(
+              title: 'Category',
+              description: '',
+              imagePath: '',
+              tint: Color(0xFF9E9E9E),
+            ),
     );
     final canSwitch = active.length > 1;
 

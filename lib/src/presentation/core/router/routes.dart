@@ -23,6 +23,11 @@ class Routes {
   static String martShopPath(String id) => '/mart-shop/$id';
   static const String martListing = '/mart/listing';
   static const String martProduct = '/mart/product';
+  static const String fashion = '/fashion';
+  static const String fashionShop = '/fashion-shop/:id';
+  static String fashionShopPath(String id) => '/fashion-shop/$id';
+  static const String fashionListing = '/fashion/listing';
+  static const String fashionProduct = '/fashion/product';
   static const String medicine = '/medicine';
   static const String medicineCategories = '/medicine/categories';
   static const String medicineProduct = '/medicine/product/:id';

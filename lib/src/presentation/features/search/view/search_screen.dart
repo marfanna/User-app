@@ -11,6 +11,7 @@ import '../../../core/router/routes.dart';
 import '../../home/models/shop_data.dart';
 import '../../home/riverpod/restaurants_provider.dart';
 import '../../mart_home/riverpod/mart_shops_provider.dart';
+import '../../fashion_home/riverpod/fashion_shops_provider.dart';
 import '../../medicine_home/models/medicine_product_args.dart';
 import '../../medicine_home/riverpod/medicine_pharmacies_provider.dart';
 
@@ -18,7 +19,7 @@ import '../../medicine_home/riverpod/medicine_pharmacies_provider.dart';
 /// restaurants search food + restaurants, medicine searches medicines +
 /// pharmacies, mart searches shops only (no product-search endpoint exists
 /// for `Product`). The launching screen picks the mode.
-enum SearchVertical { restaurant, medicine, mart }
+enum SearchVertical { restaurant, medicine, mart, fashion }
 
 // ── Product search result ──────────────────────────────────────────────────
 
@@ -74,19 +75,21 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   bool get _isMedicine => widget.vertical == SearchVertical.medicine;
   bool get _isMart => widget.vertical == SearchVertical.mart;
+  bool get _isFashion => widget.vertical == SearchVertical.fashion;
 
   // Product-search endpoint for the active vertical. Null = shops-only (no
   // product-search endpoint exists for `Product`, unlike menu/medicine).
   String? get _searchEndpoint {
     if (_isMedicine) return 'medicine-products/public/search';
-    if (_isMart) return null;
+    if (_isMart || _isFashion) return null;
     return 'menu/public/search';
   }
 
-  // Destination for a tapped shop or product (pharmacy/mart/restaurant page).
+  // Destination for a tapped shop or product.
   String _shopRoute(String shopId) {
     if (_isMedicine) return Routes.pharmacyPath(shopId);
     if (_isMart) return Routes.martShopPath(shopId);
+    if (_isFashion) return Routes.fashionShopPath(shopId);
     return Routes.restaurantDetailPath(shopId);
   }
 
@@ -195,6 +198,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         ? ref.watch(medicinePharmaciesProvider)
         : _isMart
         ? ref.watch(martShopsProvider)
+        : _isFashion
+        ? ref.watch(fashionShopsProvider)
         : ref.watch(restaurantsProvider);
 
     return Scaffold(
@@ -222,6 +227,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 ? 'Search medicines & pharmacies..'
                 : _isMart
                 ? 'Search mart shops..'
+                : _isFashion
+                ? 'Search fashion shops..'
                 : 'Search shops & products..',
             hintStyle: const TextStyle(
               fontFamily: 'Manrope',

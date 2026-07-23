@@ -1,54 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../core/router/routes.dart';
 import '../../../core/theme/theme.dart';
 import '../../../core/widgets/gradient_background.dart';
-import '../../home/models/featured_item.dart';
 import '../../medicine_home/widgets/medicine_home_header.dart';
-import '../../medicine_home/widgets/medicine_nearby_pharmacies.dart';
-import '../../medicine_home/widgets/medicine_product_strip.dart';
-import '../../medicine_home/widgets/medicine_promotional_banner.dart';
-import '../../medicine_home/widgets/medicine_reorder_strip.dart';
 import '../../medicine_home/widgets/medicine_search_bar.dart';
-import '../models/fashion_product_args.dart';
-import '../riverpod/fashion_featured_provider.dart';
 import '../riverpod/fashion_products_provider.dart';
-import '../riverpod/fashion_reorder_provider.dart';
 import '../riverpod/fashion_shops_provider.dart';
 import '../widgets/fashion_category_section.dart';
+import '../widgets/fashion_editorial_widgets.dart';
 
-/// Fashion category homepage.
-///
-/// Mirrors the Mart homepage structure: Header → Search → Order Again →
-/// Featured → Best Selling → Banner, then every real `itemCategory` as its
-/// own lazy strip, then Nearby Shops at the bottom.
 class FashionHomeScreen extends ConsumerWidget {
   const FashionHomeScreen({super.key});
-
-  // Featured/best-selling come from the generic featured feed, which carries
-  // no variant combos — the detail screen degrades to a plain add for those.
-  // Grid tiles (storefront/listing/category) carry the full combo matrix.
-  static void _openProduct(BuildContext context, FeaturedItem item) {
-    context.push(
-      Routes.fashionProduct,
-      extra: FashionProductArgs(
-        productId: item.item.id,
-        shopId: item.shopId.isNotEmpty ? item.shopId : item.shop.id,
-        shopName: item.shop.name,
-        name: item.item.name,
-        price: item.item.price.toDouble(),
-        image: item.item.image,
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final dims = context.dimensions;
     final categoriesAsync = ref.watch(fashionCategoriesProvider);
+    final productsAsync = ref.watch(fashionProductsProvider);
+    final shopsAsync = ref.watch(fashionShopsProvider);
+
+    final categories = categoriesAsync.value ?? const <String>[];
+    final products = productsAsync.value ?? const <FashionCatalogItem>[];
+    final shops = shopsAsync.value ?? const [];
+    final heroProduct = _heroProduct(products);
+    final newDrops = products.take(8).toList();
+    final trending = _trending(products);
+    final underBudget = products
+        .where((item) => item.product.price > 0 && item.product.price <= 1500)
+        .take(8)
+        .toList();
 
     return Scaffold(
       body: GradientBackground(
@@ -65,27 +48,33 @@ class FashionHomeScreen extends ConsumerWidget {
                       Gap(dims.spacing.s16),
                       const MedicineHomeHeader(currentRoute: Routes.fashion),
                       Gap(dims.spacing.s24),
+                      FashionHero(featured: heroProduct),
+                      Gap(dims.spacing.s16),
                       const MedicineSearchBar(
                         vertical: 'fashion',
-                        hintText: 'Search fashion shops..',
+                        hintText: 'Search outfits, shoes, boutiques...',
                       ),
-                      MedicineReorderStrip(
-                        icon: Icons.checkroom_outlined,
-                        ordersAsync: ref.watch(fashionReorderProvider),
-                      ),
-                      MedicineProductStrip(
-                        title: 'Featured',
-                        async: ref.watch(fashionFeaturedProvider),
-                        onItemTap: (item) => _openProduct(context, item),
-                      ),
-                      MedicineProductStrip(
-                        title: 'Best Selling',
-                        async: ref.watch(fashionBestSellingProvider),
-                        onItemTap: (item) => _openProduct(context, item),
+                      Gap(dims.spacing.s16),
+                      FashionStyleChips(categories: categories),
+                      Gap(dims.spacing.s24),
+                      FashionProductRail(
+                        title: 'New drops',
+                        subtitle: 'Fresh pieces from local fashion shops',
+                        items: newDrops,
                       ),
                       Gap(dims.spacing.s24),
-                      const MedicinePromotionalBanner(
-                        bannerCategory: 'fashion',
+                      FashionShopRail(shops: shops.take(8).toList()),
+                      Gap(dims.spacing.s24),
+                      FashionProductRail(
+                        title: 'Trending fits',
+                        subtitle: 'Popular styles with colour and size choices',
+                        items: trending,
+                      ),
+                      Gap(dims.spacing.s24),
+                      FashionProductRail(
+                        title: 'Under Tk 1500',
+                        subtitle: 'Easy style picks without overthinking it',
+                        items: underBudget,
                       ),
                       Gap(dims.spacing.s24),
                     ],
@@ -93,27 +82,30 @@ class FashionHomeScreen extends ConsumerWidget {
                 ),
               ),
               _categorySections(context, categoriesAsync),
-              SliverPadding(
-                padding: EdgeInsets.fromLTRB(
-                  dims.padding.p16,
-                  dims.spacing.s24,
-                  dims.padding.p16,
-                  0,
-                ),
-                sliver: SliverToBoxAdapter(
-                  child: MedicineNearbyPharmacies(
-                    title: 'Nearby Shops',
-                    shopsAsync: ref.watch(fashionShopsProvider),
-                    routeBuilder: Routes.fashionShopPath,
-                  ),
-                ),
-              ),
               SliverToBoxAdapter(child: Gap(dims.spacing.s100)),
             ],
           ),
         ),
       ),
     );
+  }
+
+  FashionCatalogItem? _heroProduct(List<FashionCatalogItem> products) {
+    for (final item in products) {
+      if (item.product.image != null && item.product.image!.isNotEmpty) {
+        return item;
+      }
+    }
+    return products.isEmpty ? null : products.first;
+  }
+
+  List<FashionCatalogItem> _trending(List<FashionCatalogItem> products) {
+    final variantItems = products
+        .where((item) => item.product.combos.isNotEmpty)
+        .take(8)
+        .toList();
+    if (variantItems.isNotEmpty) return variantItems;
+    return products.take(8).toList();
   }
 
   Widget _categorySections(
@@ -126,9 +118,9 @@ class FashionHomeScreen extends ConsumerWidget {
       loading: () => SliverPadding(
         padding: EdgeInsets.symmetric(horizontal: dims.padding.p16),
         sliver: SliverList.separated(
-          itemCount: 3,
+          itemCount: 2,
           separatorBuilder: (_, _) => Gap(dims.spacing.s24),
-          itemBuilder: (_, i) => const _SectionPlaceholder(),
+          itemBuilder: (_, _) => const _SectionPlaceholder(),
         ),
       ),
       error: (_, _) => const SliverToBoxAdapter(child: SizedBox.shrink()),
@@ -157,12 +149,12 @@ class _SectionPlaceholder extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.color;
     final dims = context.dimensions;
+
     return Container(
-      width: 160,
-      height: 22,
+      height: 292,
       decoration: BoxDecoration(
-        color: colors.background.surfaceContainerHighDim,
-        borderRadius: BorderRadius.circular(dims.radius.r4),
+        color: colors.background.surface,
+        borderRadius: BorderRadius.circular(dims.radius.r16),
       ),
     );
   }

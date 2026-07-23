@@ -32,6 +32,11 @@ import '../../features/fashion_home/view/fashion_listing_screen.dart';
 import '../../features/fashion_home/view/fashion_product_detail_screen.dart';
 import '../../features/fashion_home/models/fashion_product_args.dart';
 import '../../features/fashion_home/models/fashion_listing_args.dart';
+import '../../features/laundry_home/view/laundry_home_screen.dart';
+import '../../features/laundry_home/view/laundry_listing_screen.dart';
+import '../../features/laundry_home/view/laundry_service_detail_screen.dart';
+import '../../features/laundry_home/models/laundry_listing_args.dart';
+import '../../features/laundry_home/models/laundry_service_args.dart';
 import '../../features/restaurant_detail/models/restaurant_api_models.dart';
 import '../../features/restaurant_detail/view/restaurant_detail_screen.dart';
 import '../../features/restaurant_detail/view/restaurant_reviews_screen.dart';
@@ -167,9 +172,7 @@ GoRouter goRouter(Ref ref) {
         name: Routes.pharmacy,
         pageBuilder: (context, state) {
           final id = state.pathParameters['id']!;
-          return NoTransitionPage(
-            child: PharmacyStorefrontScreen(shopId: id),
-          );
+          return NoTransitionPage(child: PharmacyStorefrontScreen(shopId: id));
         },
       ),
       GoRoute(
@@ -218,6 +221,22 @@ GoRouter goRouter(Ref ref) {
         pageBuilder: (context, state) {
           final id = state.pathParameters['id']!;
           return NoTransitionPage(child: FashionStorefrontScreen(shopId: id));
+        },
+      ),
+      GoRoute(
+        path: Routes.laundryListing,
+        name: Routes.laundryListing,
+        pageBuilder: (context, state) {
+          final args = state.extra as LaundryListingArgs;
+          return MaterialPage(child: LaundryListingScreen(args: args));
+        },
+      ),
+      GoRoute(
+        path: Routes.laundryService,
+        name: Routes.laundryService,
+        pageBuilder: (context, state) {
+          final args = state.extra as LaundryServiceArgs?;
+          return MaterialPage(child: LaundryServiceDetailScreen(args: args));
         },
       ),
       GoRoute(

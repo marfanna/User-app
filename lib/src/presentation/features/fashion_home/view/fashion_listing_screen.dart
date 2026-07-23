@@ -72,13 +72,12 @@ class FashionListingScreen extends ConsumerWidget {
                         dims.spacing.s32,
                       ),
                       itemCount: items.length,
-                      gridDelegate:
-                          SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            mainAxisSpacing: dims.spacing.s12,
-                            crossAxisSpacing: dims.spacing.s12,
-                            childAspectRatio: 0.62,
-                          ),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        mainAxisSpacing: dims.spacing.s12,
+                        crossAxisSpacing: dims.spacing.s12,
+                        childAspectRatio: 0.58,
+                      ),
                       itemBuilder: (_, i) =>
                           FashionProductGridTile(item: items[i]),
                     );
@@ -146,37 +145,42 @@ class _GridSkeleton extends StatelessWidget {
         crossAxisCount: 2,
         mainAxisSpacing: dims.spacing.s12,
         crossAxisSpacing: dims.spacing.s12,
-        childAspectRatio: 0.62,
+        childAspectRatio: 0.58,
       ),
       itemBuilder: (_, _) => Container(
         decoration: BoxDecoration(
           color: colors.background.surface,
           borderRadius: BorderRadius.circular(dims.radius.r12),
         ),
-        padding: EdgeInsets.all(dims.padding.p10),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            AspectRatio(
-              aspectRatio: 1,
+            Expanded(
               child: Container(
                 decoration: BoxDecoration(
                   color: colors.background.surfaceContainerHighDim,
-                  borderRadius: BorderRadius.circular(dims.radius.r8),
+                  borderRadius: BorderRadius.circular(dims.radius.r16),
                 ),
               ),
             ),
-            Gap(dims.spacing.s8),
-            Container(
-              width: 110,
-              height: 14,
-              color: colors.background.surfaceContainerHighDim,
-            ),
-            Gap(dims.spacing.s8),
-            Container(
-              width: 60,
-              height: 14,
-              color: colors.background.surfaceContainerHighDim,
+            Padding(
+              padding: EdgeInsets.all(dims.padding.p10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 110,
+                    height: 14,
+                    color: colors.background.surfaceContainerHighDim,
+                  ),
+                  Gap(dims.spacing.s8),
+                  Container(
+                    width: 60,
+                    height: 14,
+                    color: colors.background.surfaceContainerHighDim,
+                  ),
+                ],
+              ),
             ),
           ],
         ),

@@ -22,8 +22,7 @@ class CategorySwitcher extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final active =
-        exploreCategories.where((c) => c.route != null).toList();
+    final active = exploreCategories.where((c) => c.route != null).toList();
     final current = active.firstWhere(
       (c) => c.route == currentRoute,
       orElse: () => active.isNotEmpty
@@ -31,8 +30,7 @@ class CategorySwitcher extends StatelessWidget {
           : const CategoryItem(
               title: 'Category',
               description: '',
-              imagePath: '',
-              tint: Color(0xFF9E9E9E),
+              icon: Icons.category_outlined,
             ),
     );
     final canSwitch = active.length > 1;
@@ -55,10 +53,7 @@ class CategorySwitcher extends StatelessWidget {
         for (final c in active)
           PopupMenuItem<String>(
             value: c.route!,
-            child: _MenuRow(
-              item: c,
-              isCurrent: c.route == currentRoute,
-            ),
+            child: _MenuRow(item: c, isCurrent: c.route == currentRoute),
           ),
       ],
       child: label,
@@ -107,11 +102,7 @@ class _Label extends StatelessWidget {
             ),
             if (showChevron) ...[
               const Gap(4),
-              const Icon(
-                Icons.expand_more,
-                color: Color(0xFF1C1B1F),
-                size: 24,
-              ),
+              const Icon(Icons.expand_more, color: Color(0xFF1C1B1F), size: 24),
             ],
           ],
         ),
@@ -131,16 +122,10 @@ class _MenuRow extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Image.asset(
-          item.imagePath,
-          width: 28,
-          height: 28,
-          fit: BoxFit.contain,
-          errorBuilder: (context, error, stackTrace) => Icon(
-            Icons.category_outlined,
-            size: 24,
-            color: isCurrent ? CategorySwitcher._accent : Colors.grey,
-          ),
+        Icon(
+          item.icon,
+          size: 24,
+          color: isCurrent ? CategorySwitcher._accent : Colors.grey,
         ),
         const Gap(12),
         Text(

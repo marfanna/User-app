@@ -68,7 +68,8 @@ class FashionProduct {
       mrp: _toDouble(json['mrp']),
       images: rawImages?.whereType<String>().toList() ?? const [],
       itemCategory: json['itemCategory'] as String?,
-      combos: rawCombos
+      combos:
+          rawCombos
               ?.whereType<Map<String, dynamic>>()
               .map(FashionVariantCombo.fromJson)
               .where((c) => c.color.isNotEmpty && c.size.isNotEmpty)

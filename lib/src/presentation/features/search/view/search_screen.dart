@@ -335,11 +335,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 // ── Section header ─────────────────────────────────────────────────────────
 
 class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({
-    required this.label,
-    this.count,
-    this.loading = false,
-  });
+  const _SectionHeader({required this.label, this.count, this.loading = false});
 
   final String label;
   final int? count;

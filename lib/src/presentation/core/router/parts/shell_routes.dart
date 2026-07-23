@@ -49,6 +49,13 @@ StatefulShellRoute _shellRoutes(Ref ref) {
               return const NoTransitionPage(child: FashionHomeScreen());
             },
           ),
+          GoRoute(
+            path: Routes.laundry,
+            name: Routes.laundry,
+            pageBuilder: (context, state) {
+              return const NoTransitionPage(child: LaundryHomeScreen());
+            },
+          ),
         ],
       ),
       StatefulShellBranch(
@@ -66,7 +73,9 @@ StatefulShellRoute _shellRoutes(Ref ref) {
                 parentNavigatorKey: _rootNavigatorKey,
                 pageBuilder: (context, state) {
                   final orderId = state.pathParameters['id']!;
-                  return MaterialPage(child: OrderDetailsScreen(orderId: orderId));
+                  return MaterialPage(
+                    child: OrderDetailsScreen(orderId: orderId),
+                  );
                 },
               ),
             ],

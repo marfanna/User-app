@@ -8,8 +8,8 @@ import '../../orders/riverpod/customer_orders_provider.dart';
 /// if the API doesn't populate the shop category on the order.
 final fashionReorderProvider =
     FutureProvider.autoDispose<List<CustomerOrderModel>>((ref) async {
-  final orders = await ref.watch(customerOrdersProvider.future);
-  return orders
-      .where((o) => o.shopCategory?.toLowerCase() == 'fashion')
-      .toList();
-});
+      final orders = await ref.watch(customerOrdersProvider.future);
+      return orders
+          .where((o) => o.shopCategory?.toLowerCase() == 'fashion')
+          .toList();
+    });

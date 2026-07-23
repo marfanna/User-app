@@ -28,6 +28,9 @@ class Routes {
   static String fashionShopPath(String id) => '/fashion-shop/$id';
   static const String fashionListing = '/fashion/listing';
   static const String fashionProduct = '/fashion/product';
+  static const String laundry = '/laundry';
+  static const String laundryListing = '/laundry/listing';
+  static const String laundryService = '/laundry/service';
   static const String medicine = '/medicine';
   static const String medicineCategories = '/medicine/categories';
   static const String medicineProduct = '/medicine/product/:id';

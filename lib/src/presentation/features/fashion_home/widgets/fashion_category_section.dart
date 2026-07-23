@@ -17,8 +17,8 @@ class FashionCategorySection extends ConsumerWidget {
 
   final String category;
 
-  static const double cardWidth = 150;
-  static const double stripHeight = 250;
+  static const double cardWidth = 164;
+  static const double stripHeight = 292;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -74,34 +74,39 @@ class _Skeleton extends StatelessWidget {
     Widget card() => SizedBox(
       width: FashionCategorySection.cardWidth,
       child: Container(
-        padding: EdgeInsets.all(dims.padding.p10),
         decoration: BoxDecoration(
           color: colors.background.surface,
-          borderRadius: BorderRadius.circular(dims.radius.r12),
+          borderRadius: BorderRadius.circular(dims.radius.r16),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            AspectRatio(
-              aspectRatio: 1,
+            Expanded(
               child: Container(
                 decoration: BoxDecoration(
                   color: colors.background.surfaceContainerHighDim,
-                  borderRadius: BorderRadius.circular(dims.radius.r8),
+                  borderRadius: BorderRadius.circular(dims.radius.r16),
                 ),
               ),
             ),
-            Gap(dims.spacing.s8),
-            Container(
-              width: 90,
-              height: 14,
-              color: colors.background.surfaceContainerHighDim,
-            ),
-            Gap(dims.spacing.s8),
-            Container(
-              width: 50,
-              height: 14,
-              color: colors.background.surfaceContainerHighDim,
+            Padding(
+              padding: EdgeInsets.all(dims.padding.p10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 90,
+                    height: 14,
+                    color: colors.background.surfaceContainerHighDim,
+                  ),
+                  Gap(dims.spacing.s8),
+                  Container(
+                    width: 50,
+                    height: 14,
+                    color: colors.background.surfaceContainerHighDim,
+                  ),
+                ],
+              ),
             ),
           ],
         ),

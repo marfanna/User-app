@@ -45,9 +45,7 @@ class _FashionStorefrontScreenState
   Future<void> _fetch() async {
     try {
       final dio = ref.read(dioProvider);
-      final response = await dio.get(
-        'products/public/shop/${widget.shopId}',
-      );
+      final response = await dio.get('products/public/shop/${widget.shopId}');
       final body = response.data as Map<String, dynamic>;
       final data = body['data'] as Map<String, dynamic>?;
       final items = data?['items'] as List<dynamic>?;
@@ -107,7 +105,7 @@ class _FashionStorefrontScreenState
     final filtered = _filtered;
 
     return Scaffold(
-      backgroundColor: colors.background.surfaceContainerHigh,
+      backgroundColor: colors.background.surface,
       floatingActionButton: const MedicineCartFab(),
       body: SafeArea(
         bottom: false,
@@ -170,7 +168,34 @@ class _FashionStorefrontScreenState
       ];
     }
 
+    final showFeatured =
+        _search.isEmpty && _category == null && items.length > 2;
+
     return [
+      if (showFeatured)
+        SliverPadding(
+          padding: EdgeInsets.fromLTRB(
+            dims.padding.p16,
+            dims.padding.p8,
+            dims.padding.p16,
+            dims.padding.p16,
+          ),
+          sliver: SliverToBoxAdapter(
+            child: _FeaturedCollection(
+              shopName: shopName,
+              items: items
+                  .take(4)
+                  .map(
+                    (product) => FashionCatalogItem(
+                      product: product,
+                      shopId: widget.shopId,
+                      shopName: shopName,
+                    ),
+                  )
+                  .toList(),
+            ),
+          ),
+        ),
       SliverPadding(
         padding: EdgeInsets.fromLTRB(
           dims.padding.p16,
@@ -183,7 +208,7 @@ class _FashionStorefrontScreenState
             crossAxisCount: 2,
             mainAxisSpacing: dims.spacing.s12,
             crossAxisSpacing: dims.spacing.s12,
-            childAspectRatio: 0.62,
+            childAspectRatio: 0.58,
           ),
           delegate: SliverChildBuilderDelegate(
             (_, i) => FashionProductGridTile(
@@ -212,9 +237,11 @@ class _Header extends StatelessWidget {
     final text = context.textStyle;
     final dims = context.dimensions;
     final banner = shop?.banner ?? shop?.logo;
+    final logo = shop?.logo;
     final isOpen = shop != null && shop!.isActive && !shop!.isPaused;
 
     return Stack(
+      clipBehavior: Clip.none,
       children: [
         ClipRRect(
           borderRadius: BorderRadius.only(
@@ -223,13 +250,13 @@ class _Header extends StatelessWidget {
           ),
           child: Container(
             width: double.infinity,
-            height: 180,
+            height: 260,
             color: colors.background.surfaceContainerHighDim,
             child: banner != null && banner.isNotEmpty
                 ? Image.network(
                     banner,
                     width: double.infinity,
-                    height: 180,
+                    height: 260,
                     fit: BoxFit.cover,
                     cacheWidth: 1000,
                     errorBuilder: (_, _, _) => const SizedBox.shrink(),
@@ -248,8 +275,8 @@ class _Header extends StatelessWidget {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  colors.background.transparent,
-                  colors.text.primary.withValues(alpha: 0.55),
+                  colors.text.primary.withValues(alpha: 0.18),
+                  colors.text.primary.withValues(alpha: 0.72),
                 ],
               ),
             ),
@@ -263,22 +290,43 @@ class _Header extends StatelessWidget {
         Positioned(
           left: dims.padding.p16,
           right: dims.padding.p16,
-          bottom: dims.padding.p16,
+          bottom: dims.padding.p20,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Row(
+                children: [
+                  _LogoMark(logo: logo),
+                  Gap(dims.spacing.s12),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _OpenBadge(isOpen: isOpen),
+                      Gap(dims.spacing.s8),
+                      Text(
+                        'Boutique storefront',
+                        style: text.labelSmallSemiBold.copyWith(
+                          color: colors.text.inverse.withValues(alpha: 0.86),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              Gap(dims.spacing.s16),
               Text(
                 shop?.name ?? 'Fashion',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: text.displaySmall.copyWith(color: colors.text.inverse),
+                style: text.displaySmallCompact.copyWith(
+                  color: colors.text.inverse,
+                  letterSpacing: 0,
+                ),
               ),
               Gap(dims.spacing.s8),
               Row(
                 children: [
-                  _OpenBadge(isOpen: isOpen),
                   if (shop?.rating != null && shop!.rating! > 0) ...[
-                    Gap(dims.spacing.s8),
                     Icon(
                       Icons.star,
                       size: dims.size.s16,
@@ -294,7 +342,8 @@ class _Header extends StatelessWidget {
                   ],
                   if (shop?.addressStr != null &&
                       shop!.addressStr!.isNotEmpty) ...[
-                    Gap(dims.spacing.s8),
+                    if (shop?.rating != null && shop!.rating! > 0)
+                      Gap(dims.spacing.s8),
                     Icon(
                       Icons.location_on_outlined,
                       size: dims.size.s16,
@@ -322,6 +371,47 @@ class _Header extends StatelessWidget {
   }
 }
 
+class _LogoMark extends StatelessWidget {
+  const _LogoMark({this.logo});
+
+  final String? logo;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.color;
+    final dims = context.dimensions;
+
+    return Container(
+      width: dims.size.s56,
+      height: dims.size.s56,
+      decoration: BoxDecoration(
+        color: colors.background.surface,
+        borderRadius: BorderRadius.circular(dims.radius.r16),
+        border: Border.all(
+          color: colors.background.surface.withValues(alpha: 0.34),
+        ),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: logo != null && logo!.isNotEmpty
+          ? Image.network(
+              logo!,
+              fit: BoxFit.cover,
+              cacheWidth: 160,
+              errorBuilder: (_, _, _) => _placeholder(context),
+            )
+          : _placeholder(context),
+    );
+  }
+
+  Widget _placeholder(BuildContext context) {
+    return Icon(
+      Icons.storefront_outlined,
+      color: context.color.icon.primary,
+      size: context.dimensions.size.s28,
+    );
+  }
+}
+
 class _OpenBadge extends StatelessWidget {
   const _OpenBadge({required this.isOpen});
 
@@ -332,8 +422,9 @@ class _OpenBadge extends StatelessWidget {
     final colors = context.color;
     final text = context.textStyle;
     final dims = context.dimensions;
-    final color =
-        isOpen ? colors.success.defaultValue : colors.error.defaultValue;
+    final color = isOpen
+        ? colors.success.defaultValue
+        : colors.error.defaultValue;
 
     return Container(
       padding: EdgeInsets.symmetric(
@@ -397,6 +488,54 @@ class _SearchField extends StatelessWidget {
   }
 }
 
+class _FeaturedCollection extends StatelessWidget {
+  const _FeaturedCollection({required this.shopName, required this.items});
+
+  final String shopName;
+  final List<FashionCatalogItem> items;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = context.textStyle;
+    final colors = context.color;
+    final dims = context.dimensions;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Featured collection',
+          style: text.titleLarge.copyWith(
+            color: colors.text.primary,
+            letterSpacing: 0,
+          ),
+        ),
+        Gap(dims.spacing.s4),
+        Text(
+          'Selected pieces from $shopName',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: text.bodySmall.copyWith(color: colors.text.secondary),
+        ),
+        Gap(dims.spacing.s12),
+        SizedBox(
+          height: 118,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            clipBehavior: Clip.none,
+            itemCount: items.length,
+            separatorBuilder: (_, _) => Gap(dims.spacing.s12),
+            itemBuilder: (_, index) => SizedBox(
+              width: 284,
+              child: FashionWideProductCard(item: items[index]),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _Message extends StatelessWidget {
   const _Message({required this.text});
 
@@ -454,7 +593,7 @@ class _GridSkeleton extends StatelessWidget {
           crossAxisCount: 2,
           mainAxisSpacing: dims.spacing.s12,
           crossAxisSpacing: dims.spacing.s12,
-          childAspectRatio: 0.62,
+          childAspectRatio: 0.58,
         ),
         delegate: SliverChildBuilderDelegate(
           (_, _) => Container(
@@ -462,30 +601,35 @@ class _GridSkeleton extends StatelessWidget {
               color: colors.background.surface,
               borderRadius: BorderRadius.circular(dims.radius.r12),
             ),
-            padding: EdgeInsets.all(dims.padding.p10),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                AspectRatio(
-                  aspectRatio: 1,
+                Expanded(
                   child: Container(
                     decoration: BoxDecoration(
                       color: colors.background.surfaceContainerHighDim,
-                      borderRadius: BorderRadius.circular(dims.radius.r8),
+                      borderRadius: BorderRadius.circular(dims.radius.r16),
                     ),
                   ),
                 ),
-                Gap(dims.spacing.s8),
-                Container(
-                  width: 110,
-                  height: 14,
-                  color: colors.background.surfaceContainerHighDim,
-                ),
-                Gap(dims.spacing.s8),
-                Container(
-                  width: 60,
-                  height: 14,
-                  color: colors.background.surfaceContainerHighDim,
+                Padding(
+                  padding: EdgeInsets.all(dims.padding.p10),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 110,
+                        height: 14,
+                        color: colors.background.surfaceContainerHighDim,
+                      ),
+                      Gap(dims.spacing.s8),
+                      Container(
+                        width: 60,
+                        height: 14,
+                        color: colors.background.surfaceContainerHighDim,
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),

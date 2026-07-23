@@ -62,9 +62,7 @@ class _FashionProductDetailScreenState
   Future<void> _hydrateCombos() async {
     try {
       final dio = ref.read(dioProvider);
-      final response = await dio.get(
-        'products/public/shop/${_args.shopId}',
-      );
+      final response = await dio.get('products/public/shop/${_args.shopId}');
       final body = response.data as Map<String, dynamic>;
       final data = body['data'] as Map<String, dynamic>?;
       final items = data?['items'] as List<dynamic>?;
@@ -122,7 +120,9 @@ class _FashionProductDetailScreenState
             price: combo.price,
           );
 
-    ref.read(cartProvider.notifier).addItem(
+    ref
+        .read(cartProvider.notifier)
+        .addItem(
           item: ApiMenuItemData(
             id: _args.productId,
             name: _args.name,
@@ -579,9 +579,7 @@ class _ErrorView extends StatelessWidget {
                 Gap(dims.spacing.s12),
                 Text(
                   "Couldn't open this product",
-                  style: text.bodyMedium.copyWith(
-                    color: colors.text.secondary,
-                  ),
+                  style: text.bodyMedium.copyWith(color: colors.text.secondary),
                 ),
               ],
             ),

@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -89,16 +91,49 @@ class OrderTrackingNotificationService {
     onNotificationTapped?.call(payload);
   }
 
+  /// Downloads a campaign banner for [BigPictureStyleInformation].
+  ///
+  /// Android's big-picture style needs the bytes, not a URL. Kept short and
+  /// size-capped: a slow or oversized image must never hold up — or drop — the
+  /// notification, so any failure falls back to text.
+  static Future<Uint8List?> _fetchBanner(String url) async {
+    if (url.isEmpty) return null;
+    try {
+      final response = await Dio().get<List<int>>(
+        url,
+        options: Options(
+          responseType: ResponseType.bytes,
+          receiveTimeout: const Duration(seconds: 5),
+          sendTimeout: const Duration(seconds: 5),
+        ),
+      );
+      final bytes = response.data;
+      if (bytes == null || bytes.isEmpty) return null;
+      // ~5MB ceiling; larger risks an Android transaction-size crash.
+      if (bytes.length > 5 * 1024 * 1024) {
+        debugPrint('Campaign banner too large: ${bytes.length} bytes');
+        return null;
+      }
+      return Uint8List.fromList(bytes);
+    } catch (e) {
+      debugPrint('Campaign banner download failed: $e');
+      return null;
+    }
+  }
+
   /// Show a one-off promotional/campaign notification (foreground display).
   static Future<void> showCampaign({
     required String title,
     required String body,
     String campaignId = '',
     String actionUrl = '',
+    String imageUrl = '',
   }) async {
     await initialize();
 
     final notifId = DateTime.now().millisecondsSinceEpoch.remainder(100000);
+
+    final banner = await _fetchBanner(imageUrl);
 
     final androidDetails = AndroidNotificationDetails(
       _campaignChannelId,
@@ -106,7 +141,14 @@ class OrderTrackingNotificationService {
       channelDescription: 'Offers, rewards and announcements',
       importance: Importance.high,
       priority: Priority.high,
-      styleInformation: BigTextStyleInformation(body, contentTitle: title),
+      styleInformation: banner != null
+          ? BigPictureStyleInformation(
+              ByteArrayAndroidBitmap(banner),
+              contentTitle: title,
+              summaryText: body,
+              hideExpandedLargeIcon: true,
+            )
+          : BigTextStyleInformation(body, contentTitle: title),
       ticker: title,
       actions: actionUrl.isNotEmpty
           ? [

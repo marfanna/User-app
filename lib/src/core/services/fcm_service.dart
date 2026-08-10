@@ -82,12 +82,19 @@ class FCMService {
       final notif = message.notification;
       final title = notif?.title ?? (data['title'] as String?) ?? 'Duare';
       final body = notif?.body ?? (data['body'] as String?) ?? '';
+      // The banner arrives on the platform notification block, and is repeated
+      // in `data` because that block isn't always populated in the foreground.
+      final imageUrl = notif?.android?.imageUrl ??
+          notif?.apple?.imageUrl ??
+          (data['imageUrl'] as String?) ??
+          '';
       if (body.isNotEmpty || title.isNotEmpty) {
         OrderTrackingNotificationService.showCampaign(
           title: title,
           body: body,
           campaignId: data['campaignId'] as String? ?? '',
           actionUrl: data['actionUrl'] as String? ?? '',
+          imageUrl: imageUrl,
         );
       }
       return;

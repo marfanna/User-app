@@ -12,36 +12,42 @@ const List<CategoryItem> exploreCategories = [
     title: 'Restaurants',
     description: 'Order from local restaurants',
     icon: Icons.restaurant_menu_outlined,
+    imagePath: 'assets/images/explore/Restaurants.webp',
     route: Routes.restaurants,
   ),
   CategoryItem(
     title: 'Pharmacy',
     description: 'Medicines delivered fast',
     icon: Icons.local_pharmacy_outlined,
+    imagePath: 'assets/images/explore/Pharmacy.webp',
     route: Routes.medicine,
   ),
   CategoryItem(
     title: 'Grocery',
     description: 'Daily groceries & essentials',
     icon: Icons.local_grocery_store_outlined,
+    imagePath: 'assets/images/explore/Mart.webp',
     route: Routes.mart,
   ),
   CategoryItem(
     title: 'Fashion',
     description: 'Shoes & clothing',
     icon: Icons.checkroom_outlined,
+    imagePath: 'assets/images/explore/Fashion.webp',
     route: Routes.fashion,
   ),
   CategoryItem(
     title: 'Gas Cylinder',
     description: '25kg LPG home delivery',
     icon: Icons.local_fire_department_outlined,
+    imagePath: 'assets/images/explore/Gas Cylinder.webp',
     isComingSoon: true,
   ),
   CategoryItem(
     title: 'Laundry',
     description: 'Wash & fold service',
     icon: Icons.local_laundry_service_outlined,
+    imagePath: 'assets/images/explore/Laundry.webp',
     route: Routes.laundry,
   ),
 ];
@@ -63,61 +69,50 @@ class ExploreScreen extends StatelessWidget {
     final bottomInset = MediaQuery.of(context).padding.bottom;
 
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          color: context.color.background.surface,
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: context.color.background.surfaceGradient,
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
+      backgroundColor: context.color.background.surface,
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: EdgeInsets.fromLTRB(
+                dims.padding.p24,
+                dims.padding.p24,
+                dims.padding.p24,
+                dims.padding.p0,
+              ),
+              child: Text(
+                'What you want\nto shop?',
+                style: context.textStyle.displaySmallCompact.copyWith(
+                  color: context.color.text.primary,
+                  fontWeight: FontWeight.w800,
+                  height: 1.08,
+                  letterSpacing: -0.5,
+                ),
+              ),
+            ),
+            Gap(dims.spacing.s32),
+            Expanded(
+              child: GridView.builder(
                 padding: EdgeInsets.fromLTRB(
-                  dims.padding.p24,
-                  dims.padding.p20,
-                  dims.padding.p24,
+                  dims.padding.p16,
                   dims.padding.p0,
+                  dims.padding.p16,
+                  dims.padding.p16 + 90 + bottomInset,
                 ),
-                child: Text(
-                  'Explore Categories',
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: context.textStyle.displaySmallCompact.copyWith(
-                    color: context.color.text.primary,
-                    fontWeight: FontWeight.w700,
-                    height: 1.08,
-                    letterSpacing: 0,
-                  ),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  crossAxisSpacing: 8,
+                  mainAxisSpacing: 28,
+                  childAspectRatio: 0.82,
                 ),
+                itemCount: categories.length,
+                itemBuilder: (context, index) {
+                  return _CategoryTile(item: categories[index]);
+                },
               ),
-              Gap(dims.spacing.s16),
-              Expanded(
-                child: GridView.builder(
-                  padding: EdgeInsets.fromLTRB(
-                    dims.padding.p24,
-                    dims.padding.p0,
-                    dims.padding.p24,
-                    dims.padding.p16 + 90 + bottomInset,
-                  ),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
-                    childAspectRatio: 1.02,
-                  ),
-                  itemCount: categories.length,
-                  itemBuilder: (context, index) {
-                    return _CategoryCard(item: categories[index]);
-                  },
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -129,19 +124,27 @@ class CategoryItem {
     required this.title,
     required this.description,
     required this.icon,
+    this.imagePath,
     this.route,
     this.isComingSoon = false,
   });
 
   final String title;
   final String description;
+
+  /// Material-icon fallback shown when [imagePath] is missing or fails to load.
   final IconData icon;
+
+  /// 3D product illustration (transparent PNG). Optional — falls back to
+  /// [icon] so a missing asset never looks broken.
+  final String? imagePath;
+
   final String? route;
   final bool isComingSoon;
 }
 
-class _CategoryCard extends StatelessWidget {
-  const _CategoryCard({required this.item});
+class _CategoryTile extends StatelessWidget {
+  const _CategoryTile({required this.item});
 
   final CategoryItem item;
 
@@ -149,150 +152,64 @@ class _CategoryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final dims = context.dimensions;
     final isDisabled = item.isComingSoon;
-    final titleColor = isDisabled
-        ? context.color.text.secondary
-        : context.color.text.primary;
-    final iconColor = isDisabled
-        ? context.color.icon.secondary
-        : context.color.icon.primary;
-    final radius = BorderRadius.circular(dims.radius.r16);
 
-    final decoration = BoxDecoration(
-      color: isDisabled
-          ? context.color.background.surfaceContainerHigh.withValues(
-              alpha: 0.72,
+    final iconWidget = Icon(
+      item.icon,
+      size: dims.size.s48,
+      color: context.color.icon.secondary,
+    );
+
+    final illustration = SizedBox(
+      height: dims.size.s64,
+      child: item.imagePath != null
+          ? Image.asset(
+              item.imagePath!,
+              fit: BoxFit.contain,
+              errorBuilder: (_, _, _) => Center(child: iconWidget),
             )
-          : context.color.background.surface,
-      borderRadius: radius,
-      border: Border.all(
-        color: isDisabled
-            ? context.color.border.disabled
-            : context.color.brand.primary.withValues(alpha: 0.22),
-      ),
-      boxShadow: [
-        if (!isDisabled)
-          BoxShadow(
-            color: context.color.elevation.elevationLow,
-            blurRadius: 18,
-            offset: const Offset(0, 8),
+          : Center(child: iconWidget),
+    );
+
+    final tile = Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Dim the whole illustration for coming-soon categories.
+        Opacity(opacity: isDisabled ? 0.45 : 1, child: illustration),
+        Gap(dims.spacing.s10),
+        Text(
+          item.title,
+          textAlign: TextAlign.center,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: context.textStyle.titleSmall.copyWith(
+            color: isDisabled
+                ? context.color.text.secondary
+                : context.color.text.primary,
+            fontWeight: FontWeight.w600,
+            height: 1.15,
           ),
+        ),
+        if (isDisabled) ...[
+          Gap(dims.spacing.s2),
+          Text(
+            'Coming soon',
+            textAlign: TextAlign.center,
+            style: context.textStyle.labelSmall.copyWith(
+              color: context.color.text.secondary,
+            ),
+          ),
+        ],
       ],
     );
 
-    final content = Padding(
-      padding: EdgeInsets.all(dims.padding.p16),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: dims.size.s48,
-                height: dims.size.s48,
-                decoration: BoxDecoration(
-                  color: isDisabled
-                      ? context.color.background.surfaceContainerHigh
-                      : context.color.background.surface,
-                  borderRadius: BorderRadius.circular(dims.radius.r12),
-                  border: Border.all(color: context.color.border.divider),
-                ),
-                child: Icon(item.icon, size: dims.size.s26, color: iconColor),
-              ),
-              const Spacer(),
-              if (isDisabled)
-                _ComingSoonBadge(
-                  foreground: context.color.text.secondary,
-                  background: context.color.background.surfaceContainerHigh,
-                )
-              else
-                Container(
-                  width: dims.size.s32,
-                  height: dims.size.s32,
-                  decoration: BoxDecoration(
-                    color: context.color.background.surfaceContainerHigh,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: context.color.border.divider),
-                  ),
-                  child: Icon(
-                    Icons.arrow_forward_rounded,
-                    size: dims.size.s18,
-                    color: context.color.icon.primary,
-                  ),
-                ),
-            ],
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                item.title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: context.textStyle.titleMediumCompact.copyWith(
-                  color: titleColor,
-                  fontWeight: FontWeight.w700,
-                  height: 1.15,
-                ),
-              ),
-              Gap(dims.spacing.s4),
-              Text(
-                item.description,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: context.textStyle.bodySmall.copyWith(
-                  color: context.color.text.secondary,
-                  height: 1.25,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-
-    if (isDisabled) {
-      return Container(decoration: decoration, child: content);
+    if (isDisabled || item.route == null) {
+      return tile;
     }
 
-    return Material(
-      color: context.color.background.transparent,
-      child: InkWell(
-        onTap: () => context.push(item.route!),
-        borderRadius: radius,
-        child: Ink(decoration: decoration, child: content),
-      ),
-    );
-  }
-}
-
-class _ComingSoonBadge extends StatelessWidget {
-  const _ComingSoonBadge({required this.foreground, required this.background});
-
-  final Color foreground;
-  final Color background;
-
-  @override
-  Widget build(BuildContext context) {
-    final dims = context.dimensions;
-
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: dims.padding.p8,
-        vertical: dims.padding.p4,
-      ),
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(dims.radius.r64),
-        border: Border.all(color: context.color.border.disabled),
-      ),
-      child: Text(
-        'Soon',
-        style: context.textStyle.labelSmall.copyWith(
-          color: foreground,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
+    return InkWell(
+      onTap: () => context.push(item.route!),
+      borderRadius: BorderRadius.circular(dims.radius.r16),
+      child: tile,
     );
   }
 }

@@ -79,8 +79,8 @@ class FashionProductGridTile extends StatelessWidget {
                       Expanded(
                         child: Text(
                           hasCombos
-                              ? 'from Tk ${product.price.toStringAsFixed(0)}'
-                              : 'Tk ${product.price.toStringAsFixed(0)}',
+                              ? 'from ৳${product.price.toStringAsFixed(0)}'
+                              : '৳${product.price.toStringAsFixed(0)}',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: text.titleSmall.copyWith(
@@ -149,7 +149,7 @@ class FashionWideProductCard extends StatelessWidget {
                   ),
                   Gap(dims.spacing.s8),
                   Text(
-                    'Tk ${product.price.toStringAsFixed(0)}',
+                    '৳${product.price.toStringAsFixed(0)}',
                     style: text.labelLarge.copyWith(color: colors.text.primary),
                   ),
                 ],

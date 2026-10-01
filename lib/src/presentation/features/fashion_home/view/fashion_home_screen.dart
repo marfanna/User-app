@@ -72,7 +72,7 @@ class FashionHomeScreen extends ConsumerWidget {
                       ),
                       Gap(dims.spacing.s24),
                       FashionProductRail(
-                        title: 'Under Tk 1500',
+                        title: 'Under ৳1500',
                         subtitle: 'Easy style picks without overthinking it',
                         items: underBudget,
                       ),

@@ -1,4 +1,5 @@
 import '../../restaurant_detail/models/restaurant_api_models.dart';
+import 'size_chart.dart';
 
 double? _toDouble(dynamic v) {
   if (v == null) return null;
@@ -55,11 +56,19 @@ class FashionProduct {
     this.images = const [],
     this.itemCategory,
     this.combos = const [],
+    this.sizeChart,
   });
 
-  factory FashionProduct.fromJson(Map<String, dynamic> json) {
+  /// [charts] is the container's `sizeCharts` keyed by id (see
+  /// `SizeChart.mapFromContainer`); the item's `sizeChartId` is resolved
+  /// against it so the product carries its (optional) chart directly.
+  factory FashionProduct.fromJson(
+    Map<String, dynamic> json, {
+    Map<String, SizeChart> charts = const {},
+  }) {
     final rawImages = json['images'] as List<dynamic>?;
     final rawCombos = json['variantCombos'] as List<dynamic>?;
+    final chartId = json['sizeChartId']?.toString();
     return FashionProduct(
       id: (json['_id'] ?? json['id'] ?? '') as String,
       name: (json['name'] ?? '') as String,
@@ -75,6 +84,9 @@ class FashionProduct {
               .where((c) => c.color.isNotEmpty && c.size.isNotEmpty)
               .toList() ??
           const [],
+      sizeChart: (chartId != null && chartId.isNotEmpty)
+          ? charts[chartId]
+          : null,
     );
   }
 
@@ -86,6 +98,7 @@ class FashionProduct {
   final List<String> images;
   final String? itemCategory;
   final List<FashionVariantCombo> combos;
+  final SizeChart? sizeChart;
 
   String? get image => images.isNotEmpty ? images.first : null;
 

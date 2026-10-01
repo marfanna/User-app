@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/di/dependency_injection.dart';
 import '../models/fashion_product.dart';
+import '../models/size_chart.dart';
 import 'fashion_shops_provider.dart';
 
 /// A product plus which shop sells it — `Product` items are embedded per
@@ -39,9 +40,10 @@ final fashionProductsProvider =
             final data = body['data'] as Map<String, dynamic>?;
             final items = data?['items'] as List<dynamic>?;
             if (items == null) return <FashionCatalogItem>[];
+            final charts = SizeChart.mapFromContainer(data);
             return items
                 .whereType<Map<String, dynamic>>()
-                .map(FashionProduct.fromJson)
+                .map((j) => FashionProduct.fromJson(j, charts: charts))
                 .where((p) => p.name.isNotEmpty)
                 .map(
                   (p) => FashionCatalogItem(

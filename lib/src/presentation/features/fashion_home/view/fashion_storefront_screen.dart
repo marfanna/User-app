@@ -10,6 +10,7 @@ import '../../medicine_home/widgets/medicine_filter_chips.dart';
 import '../../restaurant_detail/models/restaurant_api_models.dart';
 import '../../restaurant_detail/riverpod/restaurant_providers.dart';
 import '../models/fashion_product.dart';
+import '../models/size_chart.dart';
 import '../riverpod/fashion_products_provider.dart';
 import '../widgets/fashion_product_grid_tile.dart';
 
@@ -49,9 +50,10 @@ class _FashionStorefrontScreenState
       final body = response.data as Map<String, dynamic>;
       final data = body['data'] as Map<String, dynamic>?;
       final items = data?['items'] as List<dynamic>?;
+      final charts = SizeChart.mapFromContainer(data);
       final parsed = (items ?? const [])
           .whereType<Map<String, dynamic>>()
-          .map(FashionProduct.fromJson)
+          .map((j) => FashionProduct.fromJson(j, charts: charts))
           .where((p) => p.name.isNotEmpty)
           .toList();
       if (!mounted) return;

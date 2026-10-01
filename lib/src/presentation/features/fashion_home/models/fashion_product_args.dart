@@ -1,4 +1,5 @@
 import 'fashion_product.dart';
+import 'size_chart.dart';
 
 /// Navigation payload for the Fashion product detail route.
 ///
@@ -17,6 +18,7 @@ class FashionProductArgs {
     this.description,
     this.mrp,
     this.combos = const [],
+    this.sizeChart,
   });
 
   factory FashionProductArgs.fromProduct(
@@ -35,6 +37,7 @@ class FashionProductArgs {
       description: product.description,
       mrp: product.mrp,
       combos: product.combos,
+      sizeChart: product.sizeChart,
     );
   }
 
@@ -48,4 +51,5 @@ class FashionProductArgs {
   final String? description;
   final double? mrp;
   final List<FashionVariantCombo> combos;
+  final SizeChart? sizeChart;
 }

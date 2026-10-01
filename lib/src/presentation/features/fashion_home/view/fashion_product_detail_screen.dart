@@ -13,6 +13,7 @@ import '../../medicine_home/widgets/medicine_cart_fab.dart';
 import '../../restaurant_detail/models/restaurant_api_models.dart';
 import '../models/fashion_product.dart';
 import '../models/fashion_product_args.dart';
+import '../models/size_chart.dart';
 
 /// Fashion product detail. No single-item backend endpoint — everything
 /// renders from the nav-extra [args] payload (same as Mart), including the
@@ -42,6 +43,7 @@ class _FashionProductDetailScreenState
   final _cartFabKey = GlobalKey();
 
   late List<FashionVariantCombo> _combos;
+  SizeChart? _sizeChart;
 
   FashionProductArgs get _args => widget.args!;
 
@@ -49,30 +51,39 @@ class _FashionProductDetailScreenState
   void initState() {
     super.initState();
     _combos = widget.args?.combos ?? const [];
-    // Featured/best-selling taps arrive without combos — hydrate from the
-    // shop's container so the picker still appears for variant products.
-    if (_combos.isEmpty &&
+    _sizeChart = widget.args?.sizeChart;
+    // Featured/best-selling taps arrive without combos or chart — hydrate from
+    // the shop's container so both the picker and the size chart still appear.
+    if ((_combos.isEmpty || _sizeChart == null) &&
         widget.args != null &&
         widget.args!.shopId.isNotEmpty &&
         widget.args!.productId.isNotEmpty) {
-      _hydrateCombos();
+      _hydrate();
     }
   }
 
-  Future<void> _hydrateCombos() async {
+  Future<void> _hydrate() async {
     try {
       final dio = ref.read(dioProvider);
       final response = await dio.get('products/public/shop/${_args.shopId}');
       final body = response.data as Map<String, dynamic>;
       final data = body['data'] as Map<String, dynamic>?;
       final items = data?['items'] as List<dynamic>?;
+      final charts = SizeChart.mapFromContainer(data);
       final match = (items ?? const [])
           .whereType<Map<String, dynamic>>()
-          .map(FashionProduct.fromJson)
+          .map((j) => FashionProduct.fromJson(j, charts: charts))
           .where((p) => p.id == _args.productId)
           .toList();
-      if (!mounted || match.isEmpty || match.first.combos.isEmpty) return;
-      setState(() => _combos = match.first.combos);
+      if (!mounted || match.isEmpty) return;
+      final product = match.first;
+      if (product.combos.isEmpty && product.sizeChart == null) return;
+      setState(() {
+        if (_combos.isEmpty && product.combos.isNotEmpty) {
+          _combos = product.combos;
+        }
+        _sizeChart ??= product.sizeChart;
+      });
     } catch (_) {
       // Best-effort — stays a plain base-price add on failure.
     }
@@ -102,6 +113,20 @@ class _FashionProductDetailScreenState
   }
 
   bool get _hasCombos => _combos.isNotEmpty;
+
+  void _openSizeChart() {
+    final chart = _sizeChart;
+    if (chart == null || chart.isEmpty) return;
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: context.color.background.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => _SizeChartSheet(chart: chart),
+    );
+  }
 
   /// The price to charge: selected combo if chosen, else base "from" price.
   double get _unitPrice => _selectedCombo?.price ?? _args.price;
@@ -180,6 +205,8 @@ class _FashionProductDetailScreenState
                 selectedSize: _size,
                 sizesForColor: _sizesForColor,
                 selectedCombo: _selectedCombo,
+                sizeChart: _sizeChart,
+                onOpenChart: _openSizeChart,
                 onColor: (c) => setState(() {
                   _color = c;
                   _size = null; // reset size when colour changes
@@ -267,6 +294,8 @@ class _Details extends StatelessWidget {
     required this.selectedSize,
     required this.sizesForColor,
     required this.selectedCombo,
+    required this.sizeChart,
+    required this.onOpenChart,
     required this.onColor,
     required this.onSize,
   });
@@ -278,6 +307,8 @@ class _Details extends StatelessWidget {
   final String? selectedSize;
   final List<FashionVariantCombo> sizesForColor;
   final FashionVariantCombo? selectedCombo;
+  final SizeChart? sizeChart;
+  final VoidCallback onOpenChart;
   final ValueChanged<String> onColor;
   final ValueChanged<String> onSize;
 
@@ -370,7 +401,14 @@ class _Details extends StatelessWidget {
         // Size picker (depends on chosen colour)
         if (selectedColor != null) ...[
           Gap(dims.spacing.s16),
-          Text('Size', style: text.titleMedium),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Size', style: text.titleMedium),
+              if (sizeChart != null && !sizeChart!.isEmpty)
+                _SizeChartLink(onTap: onOpenChart),
+            ],
+          ),
           Gap(dims.spacing.s12),
           Wrap(
             spacing: dims.spacing.s8,
@@ -384,6 +422,10 @@ class _Details extends StatelessWidget {
                 ),
             ],
           ),
+        ] else if (sizeChart != null && !sizeChart!.isEmpty) ...[
+          // No colour picked yet — still let them view the chart.
+          Gap(dims.spacing.s16),
+          _SizeChartLink(onTap: onOpenChart),
         ],
 
         if (args.description != null && args.description!.isNotEmpty) ...[
@@ -397,6 +439,271 @@ class _Details extends StatelessWidget {
         ],
         Gap(dims.spacing.s16),
       ],
+    );
+  }
+}
+
+/// A compact "Size Chart" link (icon + underlined label) that opens the chart
+/// bottom sheet — keeps the detail page short.
+class _SizeChartLink extends StatelessWidget {
+  const _SizeChartLink({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.color;
+    final text = context.textStyle;
+    final dims = context.dimensions;
+
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.straighten_rounded,
+            size: dims.size.s18,
+            color: c.brand.secondary,
+          ),
+          Gap(dims.spacing.s4),
+          Text(
+            'Size Chart',
+            style: text.labelLarge.copyWith(
+              color: c.brand.secondary,
+              decoration: TextDecoration.underline,
+              decorationColor: c.brand.secondary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// INCH/CM tabbed size-chart table shown in a bottom sheet (opened from the
+/// _SizeChartLink). Values are stored in inches; CM is derived (×2.54).
+class _SizeChartSheet extends StatefulWidget {
+  const _SizeChartSheet({required this.chart});
+
+  final SizeChart chart;
+
+  @override
+  State<_SizeChartSheet> createState() => _SizeChartSheetState();
+}
+
+class _SizeChartSheetState extends State<_SizeChartSheet> {
+  bool _cm = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.color;
+    final text = context.textStyle;
+    final dims = context.dimensions;
+    final chart = widget.chart;
+    final maxHeight = MediaQuery.of(context).size.height * 0.7;
+
+    return SafeArea(
+      top: false,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: maxHeight),
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(
+            dims.padding.p16,
+            dims.padding.p8,
+            dims.padding.p16,
+            dims.padding.p16,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Drag handle
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: EdgeInsets.only(bottom: dims.spacing.s12),
+                  decoration: BoxDecoration(
+                    color: c.background.surfaceContainerHighDim,
+                    borderRadius: BorderRadius.circular(dims.radius.r64),
+                  ),
+                ),
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      chart.name.isNotEmpty ? chart.name : 'Size Chart',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: text.titleLarge,
+                    ),
+                  ),
+                  // INCH / CM toggle
+                  Container(
+                    padding: EdgeInsets.all(dims.padding.p2),
+                    decoration: BoxDecoration(
+                      color: c.background.surfaceContainerHigh,
+                      borderRadius: BorderRadius.circular(dims.radius.r64),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _UnitTab(
+                          label: 'INCH',
+                          selected: !_cm,
+                          onTap: () => setState(() => _cm = false),
+                        ),
+                        _UnitTab(
+                          label: 'CM',
+                          selected: _cm,
+                          onTap: () => setState(() => _cm = true),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              Gap(dims.spacing.s16),
+              // Table — scrolls both ways for tall/wide charts.
+              Flexible(
+                child: SingleChildScrollView(
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Table(
+                      defaultColumnWidth: const IntrinsicColumnWidth(),
+                      border: TableBorder(
+                        horizontalInside: BorderSide(color: c.border.divider),
+                      ),
+                      children: [
+                        _headerRow(context, ['Size', ...chart.columns]),
+                        for (final row in chart.rows)
+                          _dataRow(
+                            context,
+                            row.size,
+                            (_cm ? row.valuesCm : row.values)
+                                .map((v) => _fmt(v))
+                                .toList(),
+                            chart.columns.length,
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _fmt(double v) {
+    final s = v.toStringAsFixed(2);
+    return s.endsWith('.00') ? v.toStringAsFixed(0) : s;
+  }
+
+  TableRow _headerRow(BuildContext context, List<String> cells) {
+    final text = context.textStyle;
+    final c = context.color;
+    final dims = context.dimensions;
+    return TableRow(
+      children: [
+        for (final cell in cells)
+          Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: dims.padding.p12,
+              vertical: dims.padding.p8,
+            ),
+            child: Text(
+              cell,
+              style: text.labelLarge.copyWith(color: c.text.primary),
+            ),
+          ),
+      ],
+    );
+  }
+
+  TableRow _dataRow(
+    BuildContext context,
+    String size,
+    List<String> values,
+    int columnCount,
+  ) {
+    final text = context.textStyle;
+    final c = context.color;
+    final dims = context.dimensions;
+    // Pad/truncate values to the column count so ragged rows still align.
+    final cells = [
+      size,
+      for (var i = 0; i < columnCount; i++) i < values.length ? values[i] : '—',
+    ];
+    return TableRow(
+      children: [
+        for (var i = 0; i < cells.length; i++)
+          Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: dims.padding.p12,
+              vertical: dims.padding.p8,
+            ),
+            child: Text(
+              cells[i],
+              style: i == 0
+                  ? text.labelMedium.copyWith(color: c.brand.secondary)
+                  : text.bodyMedium.copyWith(color: c.text.secondary),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _UnitTab extends StatelessWidget {
+  const _UnitTab({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.color;
+    final text = context.textStyle;
+    final dims = context.dimensions;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: dims.padding.p12,
+          vertical: dims.padding.p4,
+        ),
+        decoration: BoxDecoration(
+          color: selected ? c.background.surface : c.background.transparent,
+          borderRadius: BorderRadius.circular(dims.radius.r64),
+          boxShadow: selected
+              ? [
+                  BoxShadow(
+                    color: c.elevation.elevationLow,
+                    blurRadius: 4,
+                  ),
+                ]
+              : null,
+        ),
+        child: Text(
+          label,
+          style: text.labelSmallSemiBold.copyWith(
+            color: selected ? c.brand.secondary : c.text.secondary,
+          ),
+        ),
+      ),
     );
   }
 }

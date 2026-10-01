@@ -20,7 +20,8 @@ class RestaurantsDarkHorseList extends ConsumerWidget {
     return async.when(
       loading: () => const RestaurantStripSkeleton(titleWidth: 110),
       error: (_, _) => const SizedBox.shrink(),
-      data: (shops) {
+      data: (result) {
+        final shops = result.shops;
         if (shops.isEmpty) return const SizedBox.shrink();
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -36,9 +37,11 @@ class RestaurantsDarkHorseList extends ConsumerWidget {
               ),
             ),
             const Gap(4),
-            const Text(
-              'New restaurants already topping the charts',
-              style: TextStyle(
+            Text(
+              result.isHandPicked
+                  ? 'Handpicked for you'
+                  : 'New restaurants already topping the charts',
+              style: const TextStyle(
                 fontFamily: 'Manrope',
                 fontWeight: FontWeight.w400,
                 fontSize: 13,

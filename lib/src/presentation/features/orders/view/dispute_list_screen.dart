@@ -282,7 +282,9 @@ class _TicketCard extends StatelessWidget {
               ),
               const Gap(4),
               Text(
-                DateFormat('d MMM yyyy, h:mm a').format(ticket.createdAt),
+                DateFormat(
+                  'd MMM yyyy, h:mm a',
+                ).format(ticket.createdAt.toLocal()),
                 style: const TextStyle(
                   fontFamily: 'Manrope',
                   fontSize: 11,

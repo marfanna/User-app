@@ -1,12 +1,10 @@
 import 'dart:async';
 
-import 'package:dio/dio.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../di/dependency_injection.dart';
-import '../../data/services/network/endpoints.dart';
 import '../../presentation/core/router/router.dart';
 import 'order_tracking_notification_service.dart';
 
@@ -47,8 +45,14 @@ class FCMService {
       _ref.read(goRouterProvider).push('/track-order/$orderId');
     };
     // Wire campaign notification tap → track click + open its action url
-    OrderTrackingNotificationService.onCampaignTapped = (campaignId, actionUrl) {
-      if (campaignId.isNotEmpty) _trackCampaignClick(campaignId);
+    OrderTrackingNotificationService.onCampaignTapped = (
+      campaignId,
+      notificationId,
+      actionUrl,
+    ) {
+      if (campaignId.isNotEmpty && notificationId.isNotEmpty) {
+        _trackCampaignEvent(campaignId, notificationId, 'click');
+      }
       _navigateToActionUrl(actionUrl);
     };
     await OrderTrackingNotificationService.initialize();
@@ -93,6 +97,7 @@ class FCMService {
           title: title,
           body: body,
           campaignId: data['campaignId'] as String? ?? '',
+          notificationId: data['notificationId'] as String? ?? '',
           actionUrl: data['actionUrl'] as String? ?? '',
           imageUrl: imageUrl,
         );
@@ -130,8 +135,12 @@ class FCMService {
 
     if (type == 'campaign') {
       final campaignId = data['campaignId'] as String?;
-      if (campaignId != null && campaignId.isNotEmpty) {
-        _trackCampaignClick(campaignId);
+      final notificationId = data['notificationId'] as String?;
+      if (campaignId != null &&
+          campaignId.isNotEmpty &&
+          notificationId != null &&
+          notificationId.isNotEmpty) {
+        _trackCampaignEvent(campaignId, notificationId, 'click');
       }
       _navigateToActionUrl(data['actionUrl'] as String? ?? '');
       return;
@@ -158,11 +167,27 @@ class FCMService {
     _ref.read(goRouterProvider).push(path);
   }
 
-  void _trackCampaignClick(String campaignId) {
-    Dio().post('${Endpoints.base}admin/campaigns/$campaignId/click').catchError((e) {
-      debugPrint('FCM: failed to track campaign click: $e');
-      return Response(requestOptions: RequestOptions());
-    });
+  void _trackCampaignEvent(
+    String campaignId,
+    String notificationId,
+    String type,
+  ) {
+    unawaited(_sendCampaignEvent(campaignId, notificationId, type));
+  }
+
+  Future<void> _sendCampaignEvent(
+    String campaignId,
+    String notificationId,
+    String type,
+  ) async {
+    try {
+      await _ref.read(dioProvider).post<void>(
+        'admin/campaigns/$campaignId/events',
+        data: {'notificationId': notificationId, 'type': type},
+      );
+    } catch (error) {
+      debugPrint('FCM: failed to track campaign event: $error');
+    }
   }
 
   Future<void> _sendTokenToBackend(String token) async {

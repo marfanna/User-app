@@ -19,8 +19,12 @@ class OrderTrackingNotificationService {
 
   // Set by FCMService after router is ready so taps can navigate.
   static void Function(String orderId)? onNotificationTapped;
-  // campaignId, actionUrl
-  static void Function(String campaignId, String actionUrl)? onCampaignTapped;
+  // campaignId, notificationId, actionUrl
+  static void Function(
+    String campaignId,
+    String notificationId,
+    String actionUrl,
+  )? onCampaignTapped;
 
   static Future<void> initialize() async {
     if (_initialized) return;
@@ -65,13 +69,20 @@ class OrderTrackingNotificationService {
   static void _onTap(NotificationResponse response) {
     final payload = response.payload;
     if (payload == null) return;
-    // Campaign payloads are encoded as "campaign|<campaignId>|<actionUrl>".
+    // Campaign payloads are encoded as
+    // "campaign|<campaignId>|<notificationId>|<actionUrl>".
     // Both direct tap and the "Open" action button fire the same handler.
     if (payload.startsWith('campaign|')) {
       final parts = payload.split('|');
       final campaignId = parts.length > 1 ? parts[1] : '';
-      final actionUrl = parts.length > 2 ? parts.sublist(2).join('|') : '';
-      onCampaignTapped?.call(campaignId, actionUrl);
+      final isCurrentPayload = parts.length > 3;
+      final notificationId = isCurrentPayload ? parts[2] : '';
+      final actionUrl = isCurrentPayload
+          ? parts.sublist(3).join('|')
+          : parts.length > 2
+              ? parts.sublist(2).join('|')
+              : '';
+      onCampaignTapped?.call(campaignId, notificationId, actionUrl);
       return;
     }
     // Order payloads: "order|<orderId>|<riderPhone>".
@@ -126,6 +137,7 @@ class OrderTrackingNotificationService {
     required String title,
     required String body,
     String campaignId = '',
+    String notificationId = '',
     String actionUrl = '',
     String imageUrl = '',
   }) async {
@@ -167,7 +179,7 @@ class OrderTrackingNotificationService {
       title,
       body,
       NotificationDetails(android: androidDetails),
-      payload: 'campaign|$campaignId|$actionUrl',
+      payload: 'campaign|$campaignId|$notificationId|$actionUrl',
     );
   }
 

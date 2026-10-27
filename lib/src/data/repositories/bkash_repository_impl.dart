@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:dio/dio.dart';
 
 import '../../core/base/base.dart';
@@ -10,6 +12,17 @@ class BkashRepositoryImpl implements BkashRepository {
 
   final RestClient remote;
 
+  String _createIdempotencyKey() {
+    const alphabet =
+        'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    final random = Random.secure();
+    final randomPart = List.generate(
+      32,
+      (_) => alphabet[random.nextInt(alphabet.length)],
+    ).join();
+    return 'payment-${DateTime.now().microsecondsSinceEpoch}-$randomPart';
+  }
+
   @override
   Future<Result<BkashPaymentResponseModel, Failure>> initiatePayment({
     required String orderId,
@@ -19,18 +32,20 @@ class BkashRepositoryImpl implements BkashRepository {
       final response = await remote.initiateBkashPayment({
         'orderId': orderId,
         'amount': amount,
-      });
+      }, _createIdempotencyKey());
 
-      final Map<String, dynamic> body =
-          response.data is Map ? response.data as Map<String, dynamic> : {};
+      final Map<String, dynamic> body = response.data is Map
+          ? response.data as Map<String, dynamic>
+          : {};
       final raw = (body['data'] as Map<String, dynamic>?) ?? body;
 
-      // Manual parse: avoids dart_mappable type-mismatch on `amount` (number vs String)
+      // Manual parse handles numeric/string amount responses.
       // Also covers both key variants returned by the service vs bKash direct
       return Result.success(
         data: BkashPaymentResponseModel(
           paymentID: raw['paymentId'] as String? ?? raw['paymentID'] as String?,
-          checkoutUrl: raw['checkoutUrl'] as String? ?? raw['bkashURL'] as String?,
+          checkoutUrl:
+              raw['checkoutUrl'] as String? ?? raw['bkashURL'] as String?,
           amount: raw['amount']?.toString(),
           merchantInvoiceNumber: raw['merchantInvoiceNumber'] as String?,
         ),
@@ -39,38 +54,66 @@ class BkashRepositoryImpl implements BkashRepository {
       return Result.error(Failure.mapExceptionToFailure(e));
     } catch (e, s) {
       return Result.error(
-        Failure(type: FailureType.unknown, message: e.toString(), stackTrace: s),
+        Failure(
+          type: FailureType.unknown,
+          message: e.toString(),
+          stackTrace: s,
+        ),
       );
     }
   }
 
   @override
-  Future<Result<BkashVerificationResponseModel, Failure>> verifyPayment(String paymentId) async {
+  Future<Result<BkashVerificationResponseModel, Failure>> verifyPayment(
+    String paymentId,
+  ) async {
     try {
       final response = await remote.verifyBkashPayment(paymentId);
 
-      final Map<String, dynamic> body = response.data is Map ? response.data : {};
+      final Map<String, dynamic> body = response.data is Map
+          ? response.data
+          : {};
       final data = body['data'] ?? body;
-      return Result.success(data: BkashVerificationResponseModelMapper.fromJson(data));
+      return Result.success(
+        data: BkashVerificationResponseModelMapper.fromJson(data),
+      );
     } on DioException catch (e) {
       return Result.error(Failure.mapExceptionToFailure(e));
     } catch (e, s) {
-      return Result.error(Failure(type: FailureType.unknown, message: e.toString(), stackTrace: s));
+      return Result.error(
+        Failure(
+          type: FailureType.unknown,
+          message: e.toString(),
+          stackTrace: s,
+        ),
+      );
     }
   }
 
   @override
-  Future<Result<BkashVerificationResponseModel, Failure>> queryPayment(String paymentId) async {
+  Future<Result<BkashVerificationResponseModel, Failure>> queryPayment(
+    String paymentId,
+  ) async {
     try {
       final response = await remote.queryBkashPayment(paymentId);
 
-      final Map<String, dynamic> body = response.data is Map ? response.data : {};
+      final Map<String, dynamic> body = response.data is Map
+          ? response.data
+          : {};
       final data = body['data'] ?? body;
-      return Result.success(data: BkashVerificationResponseModelMapper.fromJson(data));
+      return Result.success(
+        data: BkashVerificationResponseModelMapper.fromJson(data),
+      );
     } on DioException catch (e) {
       return Result.error(Failure.mapExceptionToFailure(e));
     } catch (e, s) {
-      return Result.error(Failure(type: FailureType.unknown, message: e.toString(), stackTrace: s));
+      return Result.error(
+        Failure(
+          type: FailureType.unknown,
+          message: e.toString(),
+          stackTrace: s,
+        ),
+      );
     }
   }
 }

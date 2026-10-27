@@ -181,10 +181,11 @@ class _RestClient implements RestClient {
   @override
   Future<HttpResponse<dynamic>> initiateBkashPayment(
     Map<String, dynamic> request,
+    String idempotencyKey,
   ) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
-    final _headers = <String, dynamic>{};
+    final _headers = <String, dynamic>{r'Idempotency-Key': idempotencyKey};
     final _data = <String, dynamic>{};
     _data.addAll(request);
     final _options = _setStreamType<HttpResponse<dynamic>>(

@@ -32,7 +32,10 @@ abstract class RestClient {
   Future<HttpResponse> order(@Path('orderId') String orderId);
 
   @POST(Endpoints.initiateBkashPayment)
-  Future<HttpResponse> initiateBkashPayment(@Body() Map<String, dynamic> request);
+  Future<HttpResponse> initiateBkashPayment(
+    @Body() Map<String, dynamic> request,
+    @Header('Idempotency-Key') String idempotencyKey,
+  );
 
   @GET(Endpoints.verifyBkashPayment)
   Future<HttpResponse> verifyBkashPayment(@Path('paymentID') String paymentId);
@@ -41,9 +44,7 @@ abstract class RestClient {
   Future<HttpResponse> queryBkashPayment(@Path('paymentID') String paymentId);
 
   @GET(Endpoints.notificationsList)
-  Future<HttpResponse> getNotifications(
-      @Query('limit') int limit,
-  );
+  Future<HttpResponse> getNotifications(@Query('limit') int limit);
 
   @PUT(Endpoints.notificationMarkRead)
   Future<HttpResponse> markNotificationRead(@Path('id') String id);

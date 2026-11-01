@@ -725,6 +725,54 @@ final class LogoutUseCaseProvider
 
 String _$logoutUseCaseHash() => r'e46d735224033bf72b7b42db70e6bd22a4d070a2';
 
+@ProviderFor(deleteAccountUseCase)
+final deleteAccountUseCaseProvider = DeleteAccountUseCaseProvider._();
+
+final class DeleteAccountUseCaseProvider
+    extends
+        $FunctionalProvider<
+          DeleteAccountUseCase,
+          DeleteAccountUseCase,
+          DeleteAccountUseCase
+        >
+    with $Provider<DeleteAccountUseCase> {
+  DeleteAccountUseCaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'deleteAccountUseCaseProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$deleteAccountUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<DeleteAccountUseCase> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  DeleteAccountUseCase create(Ref ref) {
+    return deleteAccountUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(DeleteAccountUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<DeleteAccountUseCase>(value),
+    );
+  }
+}
+
+String _$deleteAccountUseCaseHash() =>
+    r'e955dc0d2f8496e0a2143020b03e75586c8587c2';
+
 @ProviderFor(resetRepositoryUseCase)
 final resetRepositoryUseCaseProvider = ResetRepositoryUseCaseProvider._();
 

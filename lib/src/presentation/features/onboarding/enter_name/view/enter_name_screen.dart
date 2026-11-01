@@ -4,6 +4,7 @@ import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../../core/di/dependency_injection.dart';
+import '../../../../../data/services/analytics/analytics_service.dart';
 import '../../../../core/theme/src/theme_extensions/src/gradients.dart';
 import '../../../../core/router/routes.dart';
 import '../../../../core/widgets/gradient_background.dart';
@@ -20,6 +21,9 @@ class EnterNameScreen extends ConsumerStatefulWidget {
 class _EnterNameScreenState extends ConsumerState<EnterNameScreen> {
   final _ctrl = TextEditingController();
   bool _saving = false;
+  // Every login passes through this screen; only a profile without a name is
+  // a first-time sign-up. Null when the profile could not be loaded.
+  bool? _isNewUser;
 
   @override
   void initState() {
@@ -32,8 +36,9 @@ class _EnterNameScreenState extends ConsumerState<EnterNameScreen> {
       final dio = ref.read(dioProvider);
       final res = await dio.get('users/profile');
       final name = res.data['data']?['name'] as String?;
-      if (name != null && name.isNotEmpty && mounted) {
-        _ctrl.text = name;
+      _isNewUser = name == null || name.trim().isEmpty;
+      if (!_isNewUser! && mounted) {
+        _ctrl.text = name!;
       }
     } catch (_) {}
   }
@@ -48,6 +53,10 @@ class _EnterNameScreenState extends ConsumerState<EnterNameScreen> {
     try {
       final dio = ref.read(dioProvider);
       await dio.put('users/profile/update', data: {'name': name});
+      if (_isNewUser == true) {
+        _isNewUser = false;
+        AnalyticsService.instance.logCompleteRegistration();
+      }
       if (mounted) context.goNamed(Routes.selectArea);
     } catch (e) {
       if (mounted) Toast.error(context, e.toString());

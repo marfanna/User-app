@@ -25,6 +25,9 @@ abstract class RestClient {
   @POST(Endpoints.logout)
   Future<HttpResponse> logout();
 
+  @DELETE(Endpoints.deleteAccount)
+  Future<HttpResponse> deleteAccount();
+
   @POST(Endpoints.registerFCMToken)
   Future<HttpResponse> registerFCMToken(@Body() Map<String, dynamic> request);
 

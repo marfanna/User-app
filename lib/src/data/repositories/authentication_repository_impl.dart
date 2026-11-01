@@ -65,4 +65,13 @@ class AuthenticationRepositoryImpl extends AuthenticationRepository {
       return true;
     });
   }
+
+  @override
+  Future<Result<bool, Failure>> deleteAccount() {
+    return asyncGuard(() async {
+      await remote.deleteAccount();
+      await cacheService.clear();
+      return true;
+    });
+  }
 }

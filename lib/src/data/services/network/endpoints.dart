@@ -23,6 +23,7 @@ class Endpoints {
   static const String verifyOtp = 'auth/verify-otp';
   static const String refreshToken = 'auth/refresh-token';
   static const String logout = 'auth/logout';
+  static const String deleteAccount = 'users/account';
   static const String registerFCMToken = 'users/fcm/register';
 
   /// Profile

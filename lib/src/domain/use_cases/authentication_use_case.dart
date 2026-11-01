@@ -33,3 +33,13 @@ class LogoutUseCase {
     return _repository.logout();
   }
 }
+
+class DeleteAccountUseCase {
+  DeleteAccountUseCase(this._repository);
+
+  final AuthenticationRepository _repository;
+
+  Future<Result<bool, Failure>> call() {
+    return _repository.deleteAccount();
+  }
+}

@@ -106,32 +106,37 @@ class $AssetsLogoGen {
 class $AssetsImagesExploreGen {
   const $AssetsImagesExploreGen();
 
-  /// File path: assets/images/explore/cylinder.png
-  AssetGenImage get cylinder =>
-      const AssetGenImage('assets/images/explore/cylinder.png');
+  /// File path: assets/images/explore/Fashion.webp
+  AssetGenImage get fashion =>
+      const AssetGenImage('assets/images/explore/Fashion.webp');
 
-  /// File path: assets/images/explore/laundry.png
+  /// File path: assets/images/explore/Gas Cylinder.webp
+  AssetGenImage get gasCylinder =>
+      const AssetGenImage('assets/images/explore/Gas Cylinder.webp');
+
+  /// File path: assets/images/explore/Laundry.webp
   AssetGenImage get laundry =>
-      const AssetGenImage('assets/images/explore/laundry.png');
+      const AssetGenImage('assets/images/explore/Laundry.webp');
 
-  /// File path: assets/images/explore/mart.png
+  /// File path: assets/images/explore/Mart.webp
   AssetGenImage get mart =>
-      const AssetGenImage('assets/images/explore/mart.png');
+      const AssetGenImage('assets/images/explore/Mart.webp');
 
-  /// File path: assets/images/explore/medicine.png
-  AssetGenImage get medicine =>
-      const AssetGenImage('assets/images/explore/medicine.png');
+  /// File path: assets/images/explore/Pharmacy.webp
+  AssetGenImage get pharmacy =>
+      const AssetGenImage('assets/images/explore/Pharmacy.webp');
 
-  /// File path: assets/images/explore/restaurants.png
+  /// File path: assets/images/explore/Restaurants.webp
   AssetGenImage get restaurants =>
-      const AssetGenImage('assets/images/explore/restaurants.png');
+      const AssetGenImage('assets/images/explore/Restaurants.webp');
 
   /// List of all assets
   List<AssetGenImage> get values => [
-    cylinder,
+    fashion,
+    gasCylinder,
     laundry,
     mart,
-    medicine,
+    pharmacy,
     restaurants,
   ];
 }

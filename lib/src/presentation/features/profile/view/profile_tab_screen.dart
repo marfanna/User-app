@@ -26,8 +26,8 @@ class _ProfileTabScreenState extends ConsumerState<ProfileTabScreen> {
       // the whole route tree from root and leaves the shell cleanly.
       // Defer to next frame so GoRouter doesn't drop the nav when it's
       // fired during the provider-notification cycle.
-      final done = (next is AsyncData && next.value == true) ||
-          next is AsyncError;
+      final done =
+          (next is AsyncData && next.value == true) || next is AsyncError;
       if (done) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (context.mounted) context.goNamed(Routes.onboarding);
@@ -72,6 +72,10 @@ class _ProfileTabScreenState extends ConsumerState<ProfileTabScreen> {
                       _buildMenuItem(
                         title: 'Edit Profile',
                         onTap: () => context.pushNamed(Routes.editProfile),
+                      ),
+                      _buildMenuItem(
+                        title: 'Account & Privacy',
+                        onTap: () => context.pushNamed(Routes.accountPrivacy),
                       ),
                       _buildMenuItem(title: 'Order On Whatsapp', onTap: () {}),
                       _buildMenuItem(title: 'Request a Product', onTap: () {}),

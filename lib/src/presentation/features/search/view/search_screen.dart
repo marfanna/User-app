@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../data/services/analytics/analytics_service.dart';
 import '../../../../data/services/cache/cache_service.dart';
 import '../../../../core/di/dependency_injection.dart';
 import '../../../core/router/routes.dart';
@@ -141,7 +142,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     }
     _debounce = Timer(
       const Duration(milliseconds: 400),
-      () => _searchProducts(value.trim()),
+      () {
+        AnalyticsService.instance.logSearch(query: value.trim());
+        _searchProducts(value.trim());
+      },
     );
   }
 

@@ -261,6 +261,14 @@ class _AddFoodScreenState extends ConsumerState<AddFoodScreen> {
                           'description': item.description,
                           'shopName': widget.args.shopName,
                         });
+                        if (!isFav) {
+                          AnalyticsService.instance.logAddToWishlist(
+                            itemId: item.id,
+                            itemName: item.name,
+                            price: item.price,
+                            category: widget.args.shopName,
+                          );
+                        }
                         ref.invalidate(favouriteProductsProvider);
                       } catch (e) {
                         if (context.mounted) {

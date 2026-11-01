@@ -55,6 +55,7 @@ import '../../features/wallet/view/wallet_screen.dart';
 import '../../features/address_book/view/address_book_screen.dart';
 import '../../features/address_book/view/add_address_screen.dart';
 import '../../features/profile/view/edit_profile_screen.dart';
+import '../../features/profile/view/account_privacy_screen.dart';
 import '../../features/support/view/support_screen.dart';
 import '../../features/search/view/search_screen.dart';
 import '../../features/favourites/view/favourites_screen.dart';
@@ -308,6 +309,12 @@ GoRouter goRouter(Ref ref) {
         name: Routes.editProfile,
         pageBuilder: (context, state) =>
             const MaterialPage(child: EditProfileScreen()),
+      ),
+      GoRoute(
+        path: Routes.accountPrivacy,
+        name: Routes.accountPrivacy,
+        pageBuilder: (context, state) =>
+            const MaterialPage(child: AccountPrivacyScreen()),
       ),
       GoRoute(
         path: Routes.support,

@@ -9,4 +9,6 @@ abstract class AuthenticationRepository extends Repository {
   });
 
   Future<Result<bool, Failure>> logout();
+
+  Future<Result<bool, Failure>> deleteAccount();
 }

@@ -33,6 +33,11 @@ LogoutUseCase logoutUseCase(Ref ref) {
 }
 
 @riverpod
+DeleteAccountUseCase deleteAccountUseCase(Ref ref) {
+  return DeleteAccountUseCase(ref.read(authenticationRepositoryProvider));
+}
+
+@riverpod
 ResetRepositoryUseCase resetRepositoryUseCase(Ref ref) {
   return const ResetRepositoryUseCase();
 }

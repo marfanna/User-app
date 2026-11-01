@@ -65,6 +65,6 @@ class DefaultFirebaseOptions {
     projectId: 'deliverman-121d0',
     databaseURL: 'https://deliverman-121d0.firebaseio.com',
     storageBucket: 'deliverman-121d0.firebasestorage.app',
-    iosBundleId: 'com.duare.duareUser',
+    iosBundleId: 'net.duare.duare',
   );
 }

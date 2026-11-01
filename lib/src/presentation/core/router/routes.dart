@@ -52,6 +52,7 @@ class Routes {
   static const String addressBook = '/address-book';
   static const String addAddress = '/add-address';
   static const String editProfile = '/edit-profile';
+  static const String accountPrivacy = '/account-privacy';
   static const String support = '/support';
   static const String bkashPayment = '/bkash-payment';
   static const String search = '/search';

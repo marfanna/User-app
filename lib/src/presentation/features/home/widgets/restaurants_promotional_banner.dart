@@ -53,8 +53,11 @@ class _RestaurantsPromotionalBannerState
 
   @override
   Widget build(BuildContext context) {
-    final remote = ref.watch(heroBannerProvider('restaurant')).value ?? [];
-    final images = remote.isNotEmpty ? remote : _fallbackImages;
+    final remote = ref.watch(heroBannersProvider('restaurant')).value ?? [];
+    final images = remote.isNotEmpty
+        ? remote.map((b) => b.imageUrl).toList()
+        : _fallbackImages;
+    final links = remote.map((b) => b.link).toList();
     _imageCount = images.length;
 
     return SizedBox(
@@ -74,28 +77,34 @@ class _RestaurantsPromotionalBannerState
                 });
               },
               itemBuilder: (context, index) {
-                return Image.network(
-                  images[index],
-                  width: double.infinity,
-                  height: double.infinity,
-                  fit: BoxFit.cover, // equivalent to object-cover
-                  loadingBuilder: (context, child, loadingProgress) {
-                    if (loadingProgress == null) return child;
-                    return Container(
-                      color: const Color(0xFFE8EBE6),
-                      child: const Center(
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Color(0xFF0156A7),
+                final link = index < links.length ? links[index] : '';
+                return GestureDetector(
+                  onTap: link.isEmpty
+                      ? null
+                      : () => openHeroBannerLink(context, link),
+                  child: Image.network(
+                    images[index],
+                    width: double.infinity,
+                    height: double.infinity,
+                    fit: BoxFit.cover, // equivalent to object-cover
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return Container(
+                        color: const Color(0xFFE8EBE6),
+                        child: const Center(
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Color(0xFF0156A7),
+                          ),
                         ),
+                      );
+                    },
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      color: const Color(0xFFE8EBE6),
+                      child: const Icon(
+                        Icons.image_not_supported_outlined,
+                        color: Colors.grey,
                       ),
-                    );
-                  },
-                  errorBuilder: (context, error, stackTrace) => Container(
-                    color: const Color(0xFFE8EBE6),
-                    child: const Icon(
-                      Icons.image_not_supported_outlined,
-                      color: Colors.grey,
                     ),
                   ),
                 );
@@ -147,8 +156,9 @@ class _RestaurantsPromotionalBannerState
                   return LinearProgressIndicator(
                     value: value,
                     backgroundColor: Colors.white.withValues(alpha: 0.2),
-                    valueColor:
-                        const AlwaysStoppedAnimation<Color>(Colors.white),
+                    valueColor: const AlwaysStoppedAnimation<Color>(
+                      Colors.white,
+                    ),
                     minHeight: 3,
                   );
                 },

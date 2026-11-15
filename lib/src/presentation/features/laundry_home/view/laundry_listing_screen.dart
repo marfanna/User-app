@@ -5,9 +5,9 @@ import 'package:gap/gap.dart';
 import '../../../core/theme/theme.dart';
 import '../../../core/widgets/gradient_background.dart';
 import '../../../core/widgets/rounded_back_button.dart';
-import '../../medicine_home/widgets/medicine_cart_fab.dart';
 import '../models/laundry_listing_args.dart';
 import '../riverpod/laundry_provider.dart';
+import '../widgets/laundry_home_widgets.dart';
 import '../widgets/laundry_service_card.dart';
 
 class LaundryListingScreen extends ConsumerWidget {
@@ -17,12 +17,13 @@ class LaundryListingScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final colors = context.color;
     final text = context.textStyle;
     final dims = context.dimensions;
     final async = ref.watch(laundryListingProvider(args.categoryLabel));
 
     return Scaffold(
-      floatingActionButton: const MedicineCartFab(),
+      bottomNavigationBar: const LaundryCartBar(),
       body: GradientBackground(
         child: SafeArea(
           bottom: false,
@@ -62,17 +63,41 @@ class LaundryListingScreen extends ConsumerWidget {
                         text: 'No laundry items in this category yet',
                       );
                     }
-                    return ListView.separated(
+                    return SingleChildScrollView(
                       padding: EdgeInsets.fromLTRB(
                         dims.padding.p16,
                         dims.padding.p8,
                         dims.padding.p16,
                         dims.spacing.s32,
                       ),
-                      itemCount: items.length,
-                      separatorBuilder: (_, _) => Gap(dims.spacing.s12),
-                      itemBuilder: (_, index) =>
-                          LaundryServiceCard(item: items[index]),
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: dims.padding.p12,
+                        ),
+                        decoration: BoxDecoration(
+                          color: colors.background.surface,
+                          borderRadius: BorderRadius.circular(dims.radius.r12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: colors.elevation.elevationLow,
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          children: [
+                            for (var i = 0; i < items.length; i++) ...[
+                              if (i > 0)
+                                Divider(
+                                  height: 1,
+                                  color: colors.border.divider,
+                                ),
+                              LaundryServiceRow(item: items[i]),
+                            ],
+                          ],
+                        ),
+                      ),
                     );
                   },
                 ),

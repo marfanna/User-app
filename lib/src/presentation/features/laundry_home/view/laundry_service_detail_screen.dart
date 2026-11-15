@@ -9,6 +9,7 @@ import '../../../core/widgets/toast.dart';
 import '../../cart/riverpod/cart_provider.dart';
 import '../../medicine_home/widgets/medicine_cart_fab.dart';
 import '../models/laundry_service_args.dart';
+import '../widgets/laundry_service_card.dart';
 
 class LaundryServiceDetailScreen extends ConsumerStatefulWidget {
   const LaundryServiceDetailScreen({super.key, this.args});
@@ -57,7 +58,10 @@ class _LaundryServiceDetailScreenState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _Header(category: args.service.itemCategory),
+            _Header(
+              category: args.service.itemCategory,
+              image: args.service.image,
+            ),
             Padding(
               padding: EdgeInsets.all(context.dimensions.padding.p16),
               child: _Details(args: args),
@@ -76,9 +80,10 @@ class _LaundryServiceDetailScreenState
 }
 
 class _Header extends StatelessWidget {
-  const _Header({this.category});
+  const _Header({this.category, this.image});
 
   final String? category;
+  final String? image;
 
   @override
   Widget build(BuildContext context) {
@@ -89,7 +94,9 @@ class _Header extends StatelessWidget {
       height: 260,
       width: double.infinity,
       decoration: BoxDecoration(
-        color: colors.background.surfaceContainerHighest,
+        color: image != null && image!.isNotEmpty
+            ? colors.background.surface
+            : colors.brand.primary.withValues(alpha: 0.08),
         borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(dims.radius.r24),
           bottomRight: Radius.circular(dims.radius.r24),
@@ -97,35 +104,34 @@ class _Header extends StatelessWidget {
       ),
       child: Stack(
         children: [
-          Center(
-            child: Icon(
-              _iconFor(category),
-              size: dims.size.s64,
-              color: colors.icon.inverse,
+          if (image != null && image!.isNotEmpty)
+            Positioned.fill(
+              top: MediaQuery.of(context).padding.top + dims.padding.p24,
+              bottom: dims.padding.p16,
+              child: Image.network(
+                image!,
+                fit: BoxFit.contain,
+                cacheWidth: 900,
+                errorBuilder: (_, _, _) => Center(
+                  child: LaundryIconBox(
+                    category: category,
+                    size: dims.size.s100,
+                  ),
+                ),
+              ),
+            )
+          else
+            Center(
+              child: LaundryIconBox(category: category, size: dims.size.s100),
             ),
-          ),
           Positioned(
             top: MediaQuery.of(context).padding.top + dims.padding.p8,
             left: dims.padding.p16,
-            child: const RoundedBackButton.primary(),
+            child: const RoundedBackButton.secondary(),
           ),
         ],
       ),
     );
-  }
-
-  IconData _iconFor(String? category) {
-    final value = category?.toLowerCase() ?? '';
-    if (value.contains('dry')) return Icons.dry_cleaning_outlined;
-    if (value.contains('iron') || value.contains('press')) {
-      return Icons.iron_outlined;
-    }
-    if (value.contains('blanket') ||
-        value.contains('bedsheet') ||
-        value.contains('curtain')) {
-      return Icons.king_bed_outlined;
-    }
-    return Icons.local_laundry_service_outlined;
   }
 }
 
@@ -144,18 +150,42 @@ class _Details extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(service.name, style: text.titleLarge),
+        Text(service.englishName, style: text.titleLarge),
+        if (service.banglaName != null) ...[
+          Gap(dims.spacing.s4),
+          Text(
+            service.banglaName!,
+            style: text.bodyMedium.copyWith(color: colors.text.secondary),
+          ),
+        ],
         Gap(dims.spacing.s8),
         Text(
           service.itemCategory ?? 'Laundry service',
-          style: text.bodySmall.copyWith(color: colors.text.secondary),
+          style: text.labelMedium.copyWith(color: colors.text.secondary),
         ),
         Gap(dims.spacing.s16),
-        Text(
-          'Tk ${service.price.toStringAsFixed(0)} / item',
-          style: text.displaySmall.copyWith(color: colors.text.primary),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.baseline,
+          textBaseline: TextBaseline.alphabetic,
+          children: [
+            Text(
+              '৳${service.price.toStringAsFixed(0)}',
+              style: text.displaySmall.copyWith(color: colors.brand.secondary),
+            ),
+            Gap(dims.spacing.s6),
+            Text(
+              service.unitLabel,
+              style: text.bodySmall.copyWith(color: colors.text.secondary),
+            ),
+          ],
         ),
-        if (service.description != null && service.description!.isNotEmpty) ...[
+        // Skip descriptions that only repeat the unit ("Per piece.").
+        if (service.description != null &&
+            service.description!.isNotEmpty &&
+            !RegExp(
+              r'^per (piece|set|pair)\.?$',
+              caseSensitive: false,
+            ).hasMatch(service.description!.trim())) ...[
           Gap(dims.spacing.s24),
           Text('About this service', style: text.titleMedium),
           Gap(dims.spacing.s8),
@@ -185,8 +215,14 @@ class _InfoPanel extends StatelessWidget {
       padding: EdgeInsets.all(dims.padding.p16),
       decoration: BoxDecoration(
         color: colors.background.surface,
-        borderRadius: BorderRadius.circular(dims.radius.r16),
-        border: Border.all(color: colors.border.divider),
+        borderRadius: BorderRadius.circular(dims.radius.r12),
+        boxShadow: [
+          BoxShadow(
+            color: colors.elevation.elevationLow,
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         children: [
@@ -292,7 +328,7 @@ class _BottomBar extends StatelessWidget {
           Gap(dims.spacing.s16),
           Expanded(
             child: PrimaryButton.comfortable(
-              title: 'Add · Tk ${total.toStringAsFixed(0)}',
+              title: 'Add · ৳${total.toStringAsFixed(0)}',
               onPressed: onAdd,
             ),
           ),

@@ -42,6 +42,33 @@ class LaundryServiceItem {
 
   String? get image => images.isNotEmpty ? images.first : null;
 
+  /// Names are stored as "English বাংলা" (e.g. "Kameez কামিজ"). Split at the
+  /// first Bengali character so the UI can show English as the title and
+  /// Bangla as the subtitle. Falls back to the full name when there's no
+  /// Bangla part.
+  static final RegExp _bengali = RegExp(r'[ঀ-৿]');
+
+  String get englishName {
+    final index = name.indexOf(_bengali);
+    if (index <= 0) return name.trim();
+    return name.substring(0, index).trim();
+  }
+
+  String? get banglaName {
+    final index = name.indexOf(_bengali);
+    if (index <= 0) return null;
+    final value = name.substring(index).trim();
+    return value.isEmpty ? null : value;
+  }
+
+  /// "Per set." / "Per pair." from the description, else "per piece".
+  String get unitLabel {
+    final value = description?.toLowerCase() ?? '';
+    if (value.startsWith('per set')) return 'per set';
+    if (value.startsWith('per pair')) return 'per pair';
+    return 'per piece';
+  }
+
   bool get hasDiscount => mrp != null && mrp! > price;
 
   ApiMenuItemData toApiMenuItem() {
